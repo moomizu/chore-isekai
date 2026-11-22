@@ -88,7 +88,7 @@ async function shareProof(blob, subject, text, to){
 /* Where inspector reply links point. On the website this is filled in automatically.
    For the Android app, put your GitHub Pages address here (e.g. "https://yourname.github.io/guild-quests/")
    so replies open a web page that hands the code to the app. Leave "" to use app-only links. */
-const WEB_URL = "";
+const WEB_URL = "https://moomizu.github.io/chore-isekai/";
 function replyLinkBase(){
   if(WEB_URL) return WEB_URL;
   if(location.protocol==="https:" && !(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) return location.origin + location.pathname;
