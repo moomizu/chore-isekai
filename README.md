@@ -5,7 +5,7 @@
 Chore Isekai is a cozy habit tracker that turns real-life chores into guild quests. Do the dishes, take the bins out, drink some water, then spend your rewards on a little RPG: recruit companions, hunt monsters in rhythm battles, go gathering, and follow the story.
 
 ### ▶️ [Play in your browser](https://moomizu.github.io/chore-isekai/)
-📱 Android: download the latest APK from [Releases](../../releases).
+📱 Android: download the latest APK from [Releases](../../releases). (coming soon)
 
 ---
 
