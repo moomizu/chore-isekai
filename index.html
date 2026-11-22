@@ -1,0 +1,2214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chore Isekai</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Layout: full-screen gacha home. Guild hall scene + Lilia behind the counter; HUD on top, ornate nav at bottom; other screens are gold-framed panels over the dimmed hall. */
+  --night:rgba(12,20,50,.92);
+  --gold:#f3cb64;
+  --gold-dk:#a8771f;
+  --cream:#fff5d8;
+  --blue:#2f63e6;
+  --rose:#ff6f91;
+  --paper:#f4e4bd;
+  --ink:#3b2412;
+  --display:"Cinzel","Times New Roman",serif;
+  --body:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:#1a0f08;color:var(--cream);font-family:var(--body);font-size:15px;line-height:1.45;overflow:hidden}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.app{position:fixed;inset:0;max-width:560px;margin:0 auto;overflow:hidden}
+
+/* ---------- scene ---------- */
+.scene,.scene svg,#fx{position:absolute;inset:0;width:100%;height:100%}
+#fx{pointer-events:none}
+.lilia{position:absolute;left:50%;bottom:20%;width:min(86%,400px);transform:translateX(-50%);transition:filter .3s}
+.lilia svg{display:block;width:100%;height:auto;transform-origin:50% 100%;animation:breathe 4s ease-in-out infinite}
+.lilia.poke svg{animation:poke .45s ease}
+@keyframes breathe{50%{transform:translateY(3px) scaleY(.995)}}
+@keyframes poke{30%{transform:translateY(-10px)}60%{transform:translateY(2px)}}
+#eyes{transform-origin:150px 132px;animation:blinky 5s infinite}
+@keyframes blinky{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+.counter{position:absolute;left:0;right:0;bottom:0;height:24%}
+.counter svg{width:100%;height:100%;display:block}
+.app.dim .counter{filter:brightness(.45) blur(1.5px)}   /* keep the counter so Lilia doesn't float */
+.app.dim .lilia,.app.dim .scene{filter:brightness(.45) blur(1.5px)}
+
+/* ---------- HUD ---------- */
+.hud{position:absolute;top:0;left:0;right:0;padding:10px 10px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;z-index:5}
+.plate{display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,rgba(10,16,40,.9),rgba(10,16,40,.55));border:1.5px solid var(--gold);border-radius:999px;padding:4px 14px 4px 4px;min-width:0;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+.lv{width:46px;height:46px;flex:none;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#fff3b8,var(--gold) 45%,var(--gold-dk));color:#3a2205;font-family:var(--display);font-weight:900;line-height:1;text-align:center;box-shadow:inset 0 0 0 2px #fff6cf,0 0 10px rgba(243,203,100,.6)}
+.lv small{display:block;font-size:8px}
+.lv b{font-size:18px}
+.pname{font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:42vw;text-shadow:0 1px 2px #000}
+.rankline{font-size:11px;color:var(--gold);font-weight:700}
+.xpbar{height:6px;width:120px;max-width:36vw;background:rgba(255,255,255,.15);border-radius:9px;overflow:hidden;margin-top:2px}
+.xpbar i{display:block;height:100%;background:linear-gradient(90deg,#7fd8ff,#e6f7ff);box-shadow:0 0 6px #7fd8ff;transition:width .6s}
+.res{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.pill{display:flex;align-items:center;gap:6px;background:rgba(10,16,40,.85);border:1.5px solid var(--gold);border-radius:999px;padding:3px 12px 3px 4px;font-weight:800;font-variant-numeric:tabular-nums;font-size:14px;min-width:96px;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+.pill svg{width:22px;height:22px;flex:none}
+
+/* ---------- side buttons (home) ---------- */
+.side{position:absolute;right:10px;top:96px;display:flex;flex-direction:column;gap:14px;z-index:4}
+.orb{position:relative;width:62px;background:none;border:0;padding:0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:800;text-shadow:0 1px 3px #000,0 0 2px #000}
+.orb .ring{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 40% 30%,#4f7dff,#1a2c8a 70%);border:2px solid var(--gold);box-shadow:0 0 12px rgba(120,170,255,.6),inset 0 0 0 2px rgba(255,255,255,.25)}
+.orb.gold .ring{background:radial-gradient(circle at 40% 30%,#ffe9a0,#c98a1a 70%);box-shadow:0 0 14px rgba(255,210,90,.8),inset 0 0 0 2px rgba(255,255,255,.4)}
+.orb svg{width:30px;height:30px}
+.badge{position:absolute;top:-2px;right:0;min-width:20px;height:20px;border-radius:10px;background:var(--rose);color:#fff;font-size:11px;display:grid;place-items:center;padding:0 5px;border:2px solid #fff;text-shadow:none}
+
+/* ---------- dialogue ---------- */
+.dialog{position:absolute;left:10px;right:10px;bottom:96px;z-index:4;background:linear-gradient(180deg,rgba(14,22,56,.94),rgba(8,12,34,.94));border:2px solid var(--gold);border-radius:14px;padding:18px 16px 14px;box-shadow:0 0 0 4px rgba(10,16,40,.6),0 6px 16px rgba(0,0,0,.6);min-height:86px}
+.dialog::before{content:"";position:absolute;inset:4px;border:1px solid rgba(243,203,100,.4);border-radius:10px;pointer-events:none}
+.nametag{position:absolute;top:-14px;left:16px;background:linear-gradient(180deg,#ff8eab,#d64a72);color:#fff;font-family:var(--display);font-weight:900;font-size:13px;letter-spacing:.08em;padding:3px 16px;border-radius:4px;border:1.5px solid #ffe0e8;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+#lilia{font-size:15px;font-weight:500;display:block}
+.tri{position:absolute;right:14px;bottom:8px;color:var(--gold);font-size:11px;animation:bob 1s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(3px)}}
+
+/* ---------- bottom nav ---------- */
+.nav{position:absolute;left:0;right:0;bottom:0;height:84px;z-index:6;display:grid;grid-template-columns:repeat(5,1fr);align-items:end;padding:0 6px 8px;
+  background:linear-gradient(180deg,rgba(10,14,36,0),rgba(10,14,36,.96) 30%);}
+.nav::before{content:"";position:absolute;left:0;right:0;top:24px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.nav button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;font-weight:800;color:#c9d2ff;position:relative;padding:0}
+.nav button svg{width:30px;height:30px}
+.nav button[aria-selected="true"]{color:var(--gold)}
+.nav button[aria-selected="true"] svg{filter:drop-shadow(0 0 6px rgba(243,203,100,.9))}
+.nav .big .disc{width:62px;height:62px;margin-top:-26px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 40% 30%,#fff1b0,var(--gold) 45%,var(--gold-dk));border:3px solid #fff3c8;box-shadow:0 0 16px rgba(243,203,100,.8)}
+.nav .big svg{width:34px;height:34px}
+.nav .big{color:var(--gold)}
+
+/* ---------- panels ---------- */
+.panel{position:absolute;left:10px;right:10px;top:88px;bottom:90px;z-index:3;overflow:auto;display:none;flex-direction:column;gap:14px;padding:18px 2px 10px;scrollbar-width:thin}
+.app.dim .panel{display:flex}
+.frame{position:relative;background:var(--night);border:2px solid var(--gold);border-radius:12px;padding:22px 14px 14px;box-shadow:0 0 0 4px rgba(10,16,40,.55),0 8px 20px rgba(0,0,0,.6)}
+.frame::before{content:"";position:absolute;inset:4px;border:1px solid rgba(243,203,100,.35);border-radius:8px;pointer-events:none}
+.frame::after{content:"◆";position:absolute;top:-11px;right:14px;color:var(--gold);font-size:14px;text-shadow:0 0 6px var(--gold)}
+.ribbon{position:absolute;top:-15px;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:var(--display);font-weight:900;font-size:14px;letter-spacing:.12em;color:#3a2205;
+  background:linear-gradient(180deg,#fff0b0,var(--gold) 50%,#c8932a);padding:4px 22px;clip-path:polygon(0 0,100% 0,94% 50%,100% 100%,0 100%,6% 50%);text-shadow:0 1px 0 rgba(255,255,255,.5)}
+.sub{font-size:12px;color:#aeb8e8}
+.row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:9px 4px;border-top:1px solid rgba(243,203,100,.18);background:none;border-left:0;border-right:0;border-bottom:0;width:100%;text-align:left}
+.row:first-of-type{border-top:0}
+.row small{display:block;color:#aeb8e8;font-size:12px}
+.row .rt{text-align:right;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;font-size:13px}
+.none{color:#aeb8e8;font-size:13px;padding:6px 4px;text-align:center}
+.stars{color:var(--gold);letter-spacing:-1px;font-size:12px;text-shadow:0 0 4px rgba(243,203,100,.6)}
+.gem{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;font-family:var(--display);font-weight:900;font-size:16px;color:#fff;border:2px solid rgba(255,255,255,.6);text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.r-E{background:linear-gradient(160deg,#a9b4c7,#5f6b7f)}.r-D{background:linear-gradient(160deg,#69a6ff,#2459b8)}.r-C{background:linear-gradient(160deg,#5fe0c8,#13806f)}.r-B{background:linear-gradient(160deg,#c79bff,#6a2fbd)}.r-A{background:linear-gradient(160deg,#ffe28a,#c27e0a)}
+
+/* corkboard */
+.cork{background-color:#9c6a3a;background-image:radial-gradient(rgba(0,0,0,.18) 1px,transparent 1.6px),radial-gradient(rgba(255,240,200,.12) 1px,transparent 1.6px);background-size:7px 7px,11px 11px;background-position:0 0,3px 5px;
+  border-radius:6px;box-shadow:inset 0 0 0 4px #5b3519,inset 0 6px 16px rgba(0,0,0,.5);padding:20px 12px 16px}
+.notices{display:grid;grid-template-columns:repeat(2,1fr);gap:20px 12px}
+.notice{position:relative;background:var(--paper);color:var(--ink);border:0;text-align:left;padding:18px 10px 10px;min-height:124px;display:flex;flex-direction:column;gap:5px;
+  background-image:linear-gradient(180deg,rgba(255,255,255,.4),transparent 30%),radial-gradient(ellipse at 50% 50%,transparent 60%,rgba(120,80,30,.28));
+  box-shadow:3px 5px 0 rgba(0,0,0,.35);transform:rotate(var(--r,0deg));transition:transform .15s}
+.notice:hover,.notice:focus-visible{transform:rotate(0) scale(1.04);z-index:2}
+.notice::before{content:"";position:absolute;top:-7px;left:50%;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff9d93,#c8302c 55%,#7a1512);box-shadow:1px 2px 0 rgba(0,0,0,.4)}
+.notice.bounty{background-color:#f8db8c;outline:2px solid #e0a619;outline-offset:-5px}
+.notice.bounty::before{background:radial-gradient(circle at 35% 35%,#fff6b0,#d9a400 55%,#7a5a00)}
+.notice .nh{font-family:var(--display);font-weight:900;font-size:10px;letter-spacing:.12em;opacity:.7}
+.notice .nt{font-weight:700;font-size:14.5px;line-height:1.3}
+.notice .ns{color:#b8800c;font-size:12px;letter-spacing:-1px}
+.notice .nr{margin-top:auto;font-size:11px;font-weight:700;display:flex;justify-content:space-between;gap:2px;font-variant-numeric:tabular-nums}
+.stamp{position:absolute;top:7px;right:7px;width:28px;height:28px;border:2px solid currentColor;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:900;font-size:13px;transform:rotate(-12deg);opacity:.85}
+.c-S{color:#d4407a}.r-S{background:linear-gradient(160deg,#ffb3d1,#d4407a 55%,#7a3cc4)}
+.notice.storyq{box-shadow:0 0 0 3px #ffd166,0 0 16px rgba(255,209,102,.7),0 6px 10px rgba(0,0,0,.4)}
+.rankprev .c-S{color:#ff9db4}
+.c-E{color:#5f6b7f}.c-D{color:#2459b8}.c-C{color:#13806f}.c-B{color:#7a3cc4}.c-A{color:#b5780a}
+.board-empty{grid-column:1/-1;background:var(--paper);color:var(--ink);padding:14px;text-align:center;box-shadow:3px 5px 0 rgba(0,0,0,.35);transform:rotate(-1deg)}
+
+/* buttons */
+.gbtn{border:0;border-radius:999px;padding:12px 18px;font-weight:800;font-size:15px;width:100%;position:relative;overflow:hidden;
+  background:linear-gradient(180deg,#fff2b8,var(--gold) 45%,#c8902a);color:#3a2205;box-shadow:0 0 0 2px #fff6cf inset,0 3px 0 #7a5410,0 6px 12px rgba(0,0,0,.4)}
+.gbtn::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.7),transparent);animation:shine 3s infinite}
+@keyframes shine{0%{left:-60%}40%,100%{left:130%}}
+.gbtn.blue{background:linear-gradient(180deg,#8fb2ff,var(--blue) 50%,#1b3a9e);color:#fff;box-shadow:0 0 0 2px #cfe0ff inset,0 3px 0 #0e2266,0 6px 12px rgba(0,0,0,.4)}
+.gbtn.blue::after,.gbtn.plain::after{display:none}
+.gbtn.plain{background:rgba(255,255,255,.08);color:var(--cream);box-shadow:0 0 0 1.5px rgba(243,203,100,.6) inset}
+.gbtn:active{transform:translateY(2px)}
+.gbtn:disabled{opacity:.55;cursor:default}
+.btns{display:flex;flex-direction:column;gap:10px}
+.mini{background:none;border:1.5px solid #ff9b8f;color:#ff9b8f;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700}
+
+/* forms */
+form{display:flex;flex-direction:column;gap:10px}
+label{font-size:12px;color:var(--gold);font-weight:800;display:flex;flex-direction:column;gap:4px;letter-spacing:.04em}
+input[type=text],select{background:rgba(0,0,0,.35);border:1.5px solid rgba(243,203,100,.6);border-radius:8px;padding:9px 10px;color:var(--cream);width:100%}
+.r3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media (max-width:400px){.r3{grid-template-columns:1fr 1fr}.r3 label:last-child{grid-column:1/-1}}
+.note{font-size:12.5px;color:#aeb8e8}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.tiles b{display:block;font-family:var(--display);font-weight:900;font-size:24px;color:var(--gold);text-shadow:0 0 8px rgba(243,203,100,.5)}
+.tiles span{font-size:12px;color:#aeb8e8}
+
+/* modal */
+.modal{position:absolute;inset:0;z-index:20;background:rgba(4,6,20,.7);display:none;align-items:center;justify-content:center;padding:14px}
+.modal.open{display:flex}
+.sheet{width:100%;max-height:88%;overflow:auto;display:flex;flex-direction:column;gap:12px;padding-top:40px}
+.sheet .ribbon{top:8px}
+.sheet.frame::before{display:none}   /* the inner border scrolled with long content and cut across buttons */
+.sheet.frame{box-shadow:inset 0 0 0 3px var(--night),inset 0 0 0 4px rgba(243,203,100,.35),0 0 0 4px rgba(10,16,40,.55),0 8px 20px rgba(0,0,0,.6)}
+.sheet > *,.panel > *{flex-shrink:0}
+.parch{background:var(--paper);color:var(--ink);border-radius:4px;padding:16px 14px;display:flex;flex-direction:column;gap:6px;box-shadow:inset 0 0 30px rgba(120,80,30,.35)}
+.parch h3{margin:2px 0 4px;font-size:19px;line-height:1.25}
+.parch .kv{display:flex;justify-content:space-between;gap:8px;border-top:1px dashed rgba(59,36,18,.3);padding-top:6px;font-size:14px;font-variant-numeric:tabular-nums}
+.sheet h3.t{margin:0;font-size:18px;text-align:center}
+.sign{display:flex;gap:12px;align-items:center;background:rgba(243,203,100,.12);border:1.5px solid var(--gold);border-radius:10px;padding:10px 12px;font-size:14px}
+.sign .big{font-size:36px;line-height:1}
+.filebtn{display:block;text-align:center;border:2px dashed var(--gold);color:var(--gold);border-radius:10px;padding:14px;font-weight:800;cursor:pointer;position:relative}
+.filebtn input{position:absolute;opacity:0;width:1px;height:1px}
+.preview{width:100%;max-height:250px;object-fit:contain;border-radius:8px;border:2px solid var(--gold);background:#000;display:none}
+.verdict{padding:9px 12px;border-radius:8px;font-size:14px}
+.verdict.ok{background:rgba(60,200,140,.15);border:1.5px solid #7ff0b0;color:#b4ffd6}
+.verdict.no{background:rgba(255,110,90,.12);border:1.5px solid #ff9b8f;color:#ffcbc4}
+.verdict.wait{border:1.5px solid #aeb8e8;color:#aeb8e8}
+
+/* reward splash */
+.splash{position:absolute;inset:0;z-index:30;display:none;place-items:center;background:radial-gradient(circle,rgba(40,30,80,.85),rgba(4,6,20,.95));overflow:hidden}
+.splash.show{display:grid}
+.rays{position:absolute;left:50%;top:42%;width:220vmax;height:220vmax;margin:-110vmax 0 0 -110vmax;
+  background:repeating-conic-gradient(rgba(255,226,140,.18) 0 8deg,transparent 8deg 20deg);animation:spin 18s linear infinite;
+  -webkit-mask:radial-gradient(circle,#000 10%,transparent 45%);mask:radial-gradient(circle,#000 10%,transparent 45%)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sp-in{position:relative;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px;padding:20px}
+.sp-title{font-family:var(--display);font-weight:900;font-size:clamp(34px,11vw,52px);line-height:1;letter-spacing:.04em;
+  background:linear-gradient(180deg,#fffbe6,#ffd75e 50%,#d18a12);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 3px 0 #5a3500) drop-shadow(0 0 16px rgba(255,200,80,.7));animation:slam .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes slam{0%{transform:scale(2.2);opacity:0}100%{transform:scale(1);opacity:1}}
+.sp-sub{font-weight:800;font-size:16px;color:#fff}
+.loot{display:flex;gap:14px}
+.loot div{background:var(--night);border:2px solid var(--gold);border-radius:12px;padding:10px 14px;min-width:110px;display:flex;flex-direction:column;align-items:center;gap:2px;animation:pop .4s .25s both}
+.loot svg{width:40px;height:40px}
+.loot b{font-family:var(--display);font-weight:900;font-size:22px;color:var(--gold);font-variant-numeric:tabular-nums}
+.loot span{font-size:11px;color:#aeb8e8;font-weight:700}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+.tap{font-size:12px;color:#aeb8e8;animation:bob 1.2s infinite}
+.toast{position:absolute;left:50%;bottom:100px;transform:translateX(-50%);z-index:25;background:var(--night);border:1.5px solid var(--gold);border-radius:999px;padding:7px 16px;font-weight:700;font-size:13px;display:none;white-space:nowrap;max-width:94%;overflow:hidden;text-overflow:ellipsis}
+.toast.show{display:block}
+.status{position:absolute;left:0;right:0;bottom:2px;text-align:center;font-size:10px;color:rgba(200,210,255,.5);z-index:7;pointer-events:none}
+
+/* ---------- adventure ---------- */
+.subtabs{display:flex;gap:6px;position:sticky;top:0;z-index:2;padding:2px 0 4px}
+.subtabs button{flex:1;border:1.5px solid var(--gold);background:rgba(10,16,40,.92);border-radius:999px;padding:7px 2px;font-weight:800;font-size:12.5px;color:var(--cream)}
+.subtabs button.on{background:linear-gradient(180deg,#fff2b8,var(--gold) 45%,#c8902a);color:#3a2205}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1.5px solid rgba(243,203,100,.6);background:rgba(0,0,0,.3);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:700}
+.chip small{opacity:.75;font-size:11px}
+.chip.on{background:var(--gold);color:#3a2205}
+.sw{width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,.35);padding:0}
+.sw.on{border:3px solid var(--gold);box-shadow:0 0 10px var(--gold)}
+.creator{display:flex;flex-direction:column;gap:12px}
+.av-big{width:150px;margin:0 auto;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5))}
+.opt>span{font-size:12px;color:var(--gold);font-weight:800;display:block;margin-bottom:6px;letter-spacing:.04em}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.card{border:1.5px solid rgba(243,203,100,.45);background:rgba(0,0,0,.3);border-radius:10px;padding:8px 10px;text-align:left;font-size:12.5px;color:#c9d2ff}
+.card b{display:block;font-size:14px;color:var(--cream)}
+.card.on{border-color:var(--gold);background:rgba(243,203,100,.18);box-shadow:0 0 0 1px var(--gold)}
+.herotop{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:center}
+.clspill{display:inline-block;background:linear-gradient(180deg,#ff8eab,#d64a72);border-radius:999px;padding:1px 10px;font-size:12px;font-weight:800;margin-top:4px}
+.derived{display:flex;gap:12px;margin-top:8px;font-size:13px;font-variant-numeric:tabular-nums}
+.derived b{color:var(--gold)}
+.statrow{display:grid;grid-template-columns:1fr auto 34px;gap:10px;align-items:center;padding:7px 0;border-top:1px solid rgba(243,203,100,.15)}
+.statrow .sv{font-family:var(--display);font-size:20px;color:var(--gold);font-variant-numeric:tabular-nums}
+.plus{width:32px;height:32px;border-radius:50%;border:2px solid #fff6cf;background:var(--gold);color:#3a2205;font-weight:900;font-size:18px;line-height:1;padding:0;box-shadow:0 0 8px rgba(243,203,100,.7)}
+.bag{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px}
+.bag div{background:rgba(0,0,0,.3);border:1px solid rgba(243,203,100,.35);border-radius:8px;padding:6px 4px;text-align:center;font-size:11px;line-height:1.3}
+.bag b{display:block;font-size:24px;line-height:1.3}
+.thumb{width:48px;height:48px}
+.ing{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
+.ing span{font-size:12px;background:rgba(0,0,0,.35);border-radius:999px;padding:1px 8px}
+.ing .ok{color:#7ff0b0}.ing .no{color:#ff9b8f}
+.gbtn.sm{width:auto;padding:8px 12px;font-size:13px;white-space:nowrap}
+.gbtn.ready{animation:glow 1s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 0 0 2px #fff6cf inset,0 0 18px 4px rgba(255,220,120,.9)}}
+/* arena */
+.arena{position:absolute;inset:0;z-index:15;display:none;flex-direction:column;background:#0b1030}
+.arena.show{display:flex}
+.ar-top{padding:12px 14px 10px;background:var(--night);border-bottom:2px solid var(--gold);display:flex;flex-direction:column;gap:6px}
+.ar-name{font-family:var(--display);font-weight:900;font-size:17px;display:flex;justify-content:space-between;gap:8px;font-variant-numeric:tabular-nums}
+.field{position:relative;flex:1;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+.mon{position:absolute;left:50%;top:12%;width:min(52vw,220px);margin-left:calc(min(52vw,220px) / -2);filter:drop-shadow(0 12px 10px rgba(0,0,0,.45));animation:float 2.4s ease-in-out infinite}
+.mon svg,.heroEl svg{display:block;width:100%;height:auto}
+@keyframes float{50%{transform:translateY(-8px)}}
+.mon.hit,.heroEl.hit{animation:shake .25s}
+.mon.dead{animation:die .8s forwards}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes die{to{transform:scale(.2) rotate(20deg);opacity:0;filter:brightness(3)}}
+.heroEl{position:absolute;left:6%;bottom:3%;width:min(30vw,130px)}
+.beat{position:absolute;width:0;height:0;pointer-events:none}
+.beat .tgt,.beat .ring{position:absolute;left:-34px;top:-34px;width:68px;height:68px;border-radius:50%}
+.beat .tgt{border:3px solid rgba(255,255,255,.9);background:radial-gradient(circle,rgba(255,255,255,.35),rgba(255,255,255,.05) 70%)}
+.beat .ring{border:5px solid var(--gold);box-shadow:0 0 12px var(--gold)}
+.beat.def .ring{border-color:#ff5d5d;box-shadow:0 0 12px #ff5d5d}
+.beat.def .tgt{border-color:#ffb3b3;background:radial-gradient(circle,rgba(255,93,93,.35),transparent 70%)}
+.beat.skill .ring{border-color:#9be7ff;box-shadow:0 0 18px #9be7ff}
+.pop{position:absolute;transform:translate(-50%,-50%);font-family:var(--display);font-weight:900;font-size:22px;pointer-events:none;animation:rise .85s ease-out forwards;text-shadow:0 2px 0 #000,0 0 6px #000;white-space:nowrap;color:#fff;z-index:4}
+.pop.perfect{color:var(--gold);font-size:26px}.pop.miss{color:#aeb8e8}.pop.heal{color:#7ff0b0}.pop.hurt{color:#ff7a7a}
+@keyframes rise{to{transform:translate(-50%,-170%);opacity:0}}
+.banner{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,16,40,.85);border:1.5px solid var(--gold);border-radius:999px;padding:4px 16px;font-weight:800;font-size:13px;white-space:nowrap;z-index:3}
+.banner.in{animation:bannerIn .3s}
+@keyframes bannerIn{from{transform:translateX(-50%) scale(.6);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
+.hpbar{height:12px;background:rgba(0,0,0,.5);border:1.5px solid var(--gold);border-radius:8px;overflow:hidden}
+.hpbar i{display:block;height:100%;background:linear-gradient(90deg,#ff4d6a,#ff9a8a);transition:width .3s}
+.hpbar.me i{background:linear-gradient(90deg,#2fc27a,#9cf5c0)}
+.hpbar.sp i{background:linear-gradient(90deg,#4aa8ff,#bfe8ff)}
+.ar-bot{padding:10px 12px 16px;background:var(--night);border-top:2px solid var(--gold);display:flex;flex-direction:column;gap:8px}
+.hrow{display:grid;grid-template-columns:26px 1fr 64px;gap:8px;align-items:center;font-weight:800;font-size:13px;font-variant-numeric:tabular-nums}
+.ctrl{display:grid;grid-template-columns:1.5fr 1fr 1fr .9fr;gap:6px}
+.ctrl .gbtn{padding:10px 4px;font-size:13px}
+.spark{position:absolute;width:56px;height:56px;margin:-28px 0 0 -28px;border:0;border-radius:50%;padding:0;background:radial-gradient(circle,#fff 0 14%,rgba(255,240,160,.95) 28%,rgba(255,220,120,0) 70%);animation:twinkle .5s ease-in-out infinite alternate}
+.spark.rare{background:radial-gradient(circle,#fff 0 14%,rgba(190,150,255,.95) 28%,rgba(140,100,255,0) 70%)}
+@keyframes twinkle{to{transform:scale(1.2) rotate(20deg)}}
+.haul{font-size:16px;text-align:center;min-height:24px}
+
+/* ---------- rhythm battle ---------- */
+.row.hunt{grid-template-columns:1fr auto}
+.hdiff{display:inline-block;font-size:10.5px;font-weight:800;padding:1px 7px;border-radius:999px;vertical-align:2px;margin-left:4px;border:1px solid}
+.hdiff.tough{color:#ffb0a0;border-color:#e0573f;background:rgba(224,87,63,.18)}
+.hdiff.even{color:#ffe08a;border-color:#d6a83a;background:rgba(214,168,58,.16)}
+.hdiff.easy{color:#a8f0b8;border-color:#4fb36a;background:rgba(79,179,106,.15)}
+.hdiff.breeze{color:#b8dcff;border-color:#5f93c9;background:rgba(95,147,201,.15)}
+.thumbs{display:flex;gap:2px;margin-top:4px}
+.thumb.sm{width:34px;height:34px}
+.mute{background:none;border:1.5px solid var(--gold);border-radius:999px;width:34px;height:30px;font-size:15px;padding:0;margin-left:auto}
+.ar-name{align-items:center}
+#foes{position:absolute;left:0;right:0;top:0;height:58%}
+.foe{position:absolute;top:16%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:3px;transition:opacity .5s}
+.foe.solo{width:min(48vw,200px)}.foe.duo{width:min(36vw,150px)}.foe.trio{width:min(28vw,118px)}
+.foe.boss{width:min(62vw,250px);top:10%}
+.fname{font-size:11px;font-weight:800;white-space:nowrap;text-shadow:0 1px 2px #000,0 0 3px #000}
+.foe.boss .fname{font-family:var(--display);font-size:14px;color:var(--gold)}
+.fhp{width:80%;height:7px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.6);border-radius:6px;overflow:hidden}
+.fhp i{display:block;height:100%;background:linear-gradient(90deg,#ff4d6a,#ff9a8a);transition:width .25s}
+.foe .sprite{width:100%;filter:drop-shadow(0 12px 10px rgba(0,0,0,.45));animation:float 2.4s ease-in-out infinite}
+.foe .sprite.enter{animation:enter .6s ease-out}
+.foe .sprite.hit{animation:shake .22s}
+.foe.dead{opacity:0;pointer-events:none}
+.foe.dead .sprite{animation:die .6s forwards}
+@keyframes enter{from{transform:translateY(-40px) scale(.6);opacity:0}to{transform:none;opacity:1}}
+.tmark{color:var(--gold);font-size:14px;line-height:1;visibility:hidden;animation:bob 1s infinite;text-shadow:0 0 6px var(--gold)}
+.foe.targeted .tmark{visibility:visible}
+.heroEl .sprite{width:100%}
+.beat.hold .tgt{background:conic-gradient(rgba(255,226,120,.85) var(--p,0deg),rgba(255,255,255,.12) 0);border-style:double;border-width:5px}
+.beat.def.hold .tgt{background:conic-gradient(rgba(255,120,120,.85) var(--p,0deg),rgba(255,93,93,.15) 0)}
+.beat.holding .ring{opacity:0}
+.beat.holding .tgt{box-shadow:0 0 18px var(--gold)}
+.beat.heavy .tgt::after{content:"HOLD";position:absolute;inset:0;display:grid;place-items:center;font-size:11px;font-weight:900;color:#fff;text-shadow:0 1px 2px #000}
+.beat.hold:not(.heavy):not(.skill) .tgt::after{content:"HOLD";position:absolute;inset:0;display:grid;place-items:center;font-size:11px;font-weight:900;color:#3a2205}
+.beat.skill .tgt{left:-44px;top:-44px;width:88px;height:88px;border:4px solid #fff;background:conic-gradient(from 0deg,rgba(255,110,140,.6),rgba(255,226,120,.6),rgba(120,230,255,.6),rgba(190,140,255,.6),rgba(255,110,140,.6));box-shadow:0 0 22px rgba(255,255,255,.8)}
+.beat.skill.hold .tgt{background:conic-gradient(rgba(255,255,255,.9) var(--p,0deg),transparent 0),conic-gradient(from 0deg,rgba(255,110,140,.6),rgba(255,226,120,.6),rgba(120,230,255,.6),rgba(190,140,255,.6),rgba(255,110,140,.6))}
+.beat.skill .ring{left:-44px;top:-44px;width:88px;height:88px;border:6px solid transparent;background:linear-gradient(#000,#000) padding-box,conic-gradient(#ff6e8c,#ffe278,#78e6ff,#be8cff,#ff6e8c) border-box;-webkit-mask:radial-gradient(circle,transparent 60%,#000 61%);mask:radial-gradient(circle,transparent 60%,#000 61%);box-shadow:none}
+.beat .star{position:absolute;left:0;top:0;transform:translate(-50%,-50%);font-size:40px;color:#fff;text-shadow:0 0 12px #ffe278,0 0 24px #ff6e8c;animation:spinstar 1.2s linear infinite}
+@keyframes spinstar{to{transform:translate(-50%,-50%) rotate(360deg)}}
+.cutin{position:absolute;inset:0;z-index:6;pointer-events:none;display:none;background:rgba(0,0,0,.4)}
+.cutin.show{display:block;animation:fadeout .25s ease-in calc(var(--d,1s)) forwards}
+.ci-band{position:absolute;left:-10%;right:-10%;top:26%;height:40%;transform:skewY(-8deg);background:linear-gradient(90deg,var(--c1),var(--c2));overflow:hidden;box-shadow:0 0 0 4px #fff,0 0 30px rgba(0,0,0,.6);animation:bandIn .25s ease-out}
+.ci-lines{position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.28) 0 2px,transparent 2px 22px);animation:lines .3s linear infinite}
+@keyframes lines{to{transform:translateX(-60px)}}
+@keyframes bandIn{from{transform:skewY(-8deg) scaleY(0)}to{transform:skewY(-8deg) scaleY(1)}}
+.ci-hero{position:absolute;left:12%;bottom:-18%;width:46%;transform:skewY(8deg);animation:heroIn .4s cubic-bezier(.2,1.4,.4,1)}
+@keyframes heroIn{from{transform:skewY(8deg) translateX(-120%)}to{transform:skewY(8deg)}}
+.ci-text{position:absolute;right:12%;top:50%;transform:skewY(8deg) translateY(-50%);text-align:right;animation:textIn .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes textIn{from{transform:skewY(8deg) translate(140%,-50%)}to{transform:skewY(8deg) translateY(-50%)}}
+.ci-text small{display:block;font-weight:800;font-size:11px;letter-spacing:.12em;color:#fff;text-shadow:0 1px 2px #000}
+.ci-text b{display:block;font-family:var(--display);font-weight:900;font-size:clamp(24px,8vw,38px);line-height:1.05;color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.5),0 0 18px rgba(255,255,255,.8)}
+.flashfx{position:absolute;inset:0;pointer-events:none;z-index:5;opacity:0}
+.flashfx.go{animation:flash .5s ease-out}
+.flashfx.fire{background:radial-gradient(circle at 50% 35%,rgba(255,200,80,.9),rgba(255,60,30,.5) 40%,transparent 70%)}
+.flashfx.holy{background:radial-gradient(circle at 50% 30%,rgba(255,255,230,.95),rgba(255,226,140,.5) 40%,transparent 70%)}
+.flashfx.slash,.flashfx.punch{background:rgba(255,255,255,.7)}
+.flashfx.shadow{background:rgba(120,60,200,.35)}
+.flashfx.arrow{background:linear-gradient(90deg,transparent,rgba(160,255,200,.6),transparent)}
+@keyframes flash{0%{opacity:1}100%{opacity:0}}
+@keyframes fadeout{to{opacity:0}}
+.slashfx{position:absolute;left:-20%;right:-20%;top:28%;height:10px;background:linear-gradient(90deg,transparent,#fff 30%,#ffd23f 50%,#fff 70%,transparent);box-shadow:0 0 20px #ffd23f;transform:rotate(var(--r));animation:slash .5s ease-out forwards;z-index:5;pointer-events:none}
+@keyframes slash{from{clip-path:inset(0 100% 0 0)}60%{clip-path:inset(0 0 0 0);opacity:1}to{clip-path:inset(0 0 0 0);opacity:0}}
+.burst{position:absolute;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;z-index:5;pointer-events:none;animation:burst .7s ease-out forwards}
+.burst.fire{background:radial-gradient(circle,#fff6c0,#ffb13d 35%,#ff3d3d 60%,transparent 70%)}
+.burst.holy{background:radial-gradient(circle,#fff,#ffe9a0 40%,transparent 70%)}
+.burst.arrow{background:radial-gradient(circle,#fff,#9cf5c0 40%,transparent 70%)}
+.burst.punch{background:radial-gradient(circle,#fff,#ffb3b3 40%,transparent 70%)}
+.burst.shadow{background:radial-gradient(circle,#e8d8ff,#7a3cc4 40%,transparent 70%)}
+@keyframes burst{to{transform:scale(7);opacity:0}}
+
+/* ---------- restructure ---------- */
+.plate{cursor:pointer}
+.portrait-sm{width:48px;height:48px;flex:none;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 40% 30%,#5b86ff,#1a2c8a 75%);border:2px solid var(--gold);box-shadow:0 0 10px rgba(243,203,100,.55),inset 0 0 0 2px rgba(255,255,255,.25);display:grid;place-items:center}
+.portrait-sm svg{width:100%;height:100%;display:block}
+.rankline b{font-family:var(--display);font-size:13px;color:var(--gold)}
+.panel.sheetup{animation:sheetUp .3s ease-out}
+@keyframes sheetUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.boardhead{display:flex;gap:8px;align-items:center;position:sticky;top:0;z-index:3}
+.boardhead .subtabs{flex:1;position:static;min-width:0}
+.boardhead .subtabs button{font-size:11.5px;padding:7px 2px;white-space:nowrap;min-width:0}
+.xbtn{flex:none;width:38px;height:38px;border-radius:50%;border:2px solid var(--gold);background:rgba(10,16,40,.92);color:var(--gold);font-weight:900;font-size:16px}
+.grp{margin:10px 0 2px;font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--gold);text-transform:uppercase}
+.mini.edit{border-color:var(--gold);color:var(--gold)}
+.poolset{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px;font-size:13px;color:#c9d2ff}
+.poolset b{font-family:var(--display);color:var(--gold);font-size:18px}
+.poolset .mini,.stepper .mini{border-color:var(--gold);color:var(--gold);width:30px;height:30px;padding:0;font-size:16px}
+.cards.three{grid-template-columns:repeat(3,1fr)}
+.cards.three .card{padding:7px 8px;font-size:11.5px}
+.cards.three .card b{font-size:13px}
+.gbtn.danger{color:#ff9b8f;box-shadow:0 0 0 1.5px rgba(255,155,143,.6) inset}
+.postform input[type=date]{background:rgba(0,0,0,.35);border:1.5px solid rgba(243,203,100,.6);border-radius:8px;padding:9px 10px;color:var(--cream);width:100%;color-scheme:dark}
+.notice.overdue{outline:2px solid #c8302c;outline-offset:-5px}
+.notice.overdue .nh{color:#c8302c;opacity:1}
+.gcard{display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px;align-items:center;background:linear-gradient(135deg,rgba(243,203,100,.16),rgba(47,99,230,.18));border:1.5px solid rgba(243,203,100,.5);border-radius:12px;padding:10px}
+.gc-art{filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}
+.gc-name{font-weight:800;font-size:19px}
+.gc-rank{display:flex;gap:12px;align-items:center;margin-top:8px;min-width:0}
+.gc-rank > div:last-child{flex:1;min-width:0}
+.gc-info{min-width:0}
+.gc-rank .crest{width:50px;height:58px;display:grid;place-items:center;align-content:center;background:radial-gradient(circle at 40% 30%,#fff3b8,var(--gold) 50%,var(--gold-dk));color:#3a2205;clip-path:polygon(50% 0,100% 16%,100% 68%,50% 100%,0 68%,0 16%);font-family:var(--display);font-weight:900;font-size:24px;line-height:1}
+.gc-rank .crest small{font-size:7px;letter-spacing:.1em}
+.gc-rank b{font-family:var(--display);font-size:20px;color:var(--gold)}
+.gc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;font-size:12px;color:#c9d2ff}
+.gc-stats span{background:rgba(0,0,0,.3);border-radius:8px;padding:5px 2px}
+.gc-stats b{display:block;font-size:15px;color:var(--cream);font-variant-numeric:tabular-nums}
+.setrow{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.setrow small{display:block;color:#aeb8e8;font-size:12px}
+.toggle{flex:none;width:54px;height:30px;border-radius:999px;border:2px solid var(--gold);background:rgba(0,0,0,.4);position:relative;padding:0}
+.toggle i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#aeb8e8;transition:left .2s}
+.toggle.on{background:rgba(243,203,100,.35)}
+.toggle.on i{left:27px;background:var(--gold)}
+.stepper{display:flex;align-items:center;gap:8px;flex:none}
+.stepper b{min-width:62px;text-align:center;font-variant-numeric:tabular-nums}
+#calBox{margin-top:12px}
+.calpad{width:100%;height:150px;border-radius:14px;border:3px solid var(--gold);background:radial-gradient(circle,rgba(243,203,100,.25),rgba(10,16,40,.6));font-family:var(--display);font-weight:900;font-size:22px;color:var(--gold);touch-action:none;user-select:none;-webkit-user-select:none}
+.calpad.pulse{background:radial-gradient(circle,rgba(243,203,100,.6),rgba(10,16,40,.6))}
+
+.contract{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:10px;border:1.5px solid rgba(243,203,100,.4);border-radius:10px;background:rgba(0,0,0,.25);margin-top:8px}
+.contract.slay{border-color:rgba(255,120,120,.5)}
+.contract b{display:block;font-size:14.5px;margin:1px 0 4px}
+.contract small{display:block;color:#aeb8e8;font-size:12px;margin-top:3px}
+.thumb.big{display:grid;place-items:center;font-size:34px;width:52px;height:52px}
+.ctype{font-size:10.5px;font-weight:800;letter-spacing:.08em;color:var(--gold)}
+.contract.slay .ctype{color:#ff9b8f}
+.cbar{height:7px;border-radius:6px;background:rgba(0,0,0,.45);overflow:hidden}
+.cbar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),#fff2b8)}
+.contract.slay .cbar i{background:linear-gradient(90deg,#ff4d6a,#ff9a8a)}
+
+.codebox{display:flex;gap:8px}
+.codebox input{flex:1;background:rgba(0,0,0,.35);border:1.5px solid rgba(243,203,100,.6);border-radius:8px;padding:9px 10px;color:var(--cream);text-transform:uppercase;letter-spacing:.06em}
+input[type=email],input[type=password]{background:rgba(0,0,0,.35);border:1.5px solid rgba(243,203,100,.6);border-radius:8px;padding:9px 10px;color:var(--cream);width:100%}
+/* ---------- pixel art + party + gacha ---------- */
+img.px{image-rendering:pixelated;image-rendering:crisp-edges;display:block;width:100%;height:auto}
+img.art{display:block;width:100%;height:auto;object-fit:contain}
+.pslot img.art,.rcard img.art,.gfront img.art,.chartop img.art,.ultbtn img.art{border-radius:8px}
+.portrait-sm img.art.head{width:100%;height:100%;margin:0;object-fit:cover}
+.lilia.drawn svg{display:none}
+.lilia-stack{position:relative;transform-origin:50% 100%;animation:breathe 4s ease-in-out infinite}
+.lilia-stack img{display:block;width:100%;height:auto}
+.lilia-stack img:not(.base){position:absolute;inset:0}
+.lilia-stack .eyes_closed,.lilia.blink .lilia-stack .eyes_open{visibility:hidden}
+.lilia.blink .lilia-stack .eyes_closed{visibility:visible}
+.lilia-stack .mouth_open,.lilia.talk .lilia-stack .mouth_closed{visibility:hidden}
+.lilia.talk .lilia-stack .mouth_open{visibility:visible}
+img.px.ico{display:inline-block;width:20px;height:20px;vertical-align:-5px}
+img.px.lootico{width:40px;height:40px}
+.portrait-sm img.head{width:190%;max-width:none;margin:-4% 0 0 -45%}
+.thumb img{width:100%}
+button.pill{cursor:pointer;color:var(--cream)}
+.wklist{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:4px;font-size:11px;color:#c9d2ff}
+.wk{color:#9cf5c0;margin-left:2px}.rs{color:#ff9b8f;margin-left:4px}
+.fweak{font-size:10px;line-height:1;background:rgba(0,0,0,.5);border-radius:6px;padding:2px 5px;white-space:nowrap}
+.pslots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pslot{border:2px solid rgba(243,203,100,.5);background:rgba(0,0,0,.3);border-radius:12px;padding:6px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:1px;color:var(--cream);font-size:12px;text-align:center;min-height:150px;justify-content:flex-end}
+.pslot img{width:78%}
+.pslot b{font-size:13px}.pslot small{color:#c9d2ff;font-size:10.5px}
+.pslot.hero{border-color:var(--gold);background:linear-gradient(180deg,rgba(243,203,100,.2),rgba(0,0,0,.3))}
+.pslot.empty{border-style:dashed;justify-content:center}
+.pslot.empty .pplus{font-size:30px;line-height:1;color:var(--gold)}
+.pslot.r5,.rcard.r5{border-color:#ffd23f;box-shadow:0 0 10px rgba(255,210,63,.45)}
+.pslot.r4,.rcard.r4{border-color:#c79bff}
+.pslot.r3,.rcard.r3{border-color:#69a6ff}
+.roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.rcard{position:relative;border:2px solid;border-radius:10px;padding:4px 4px 6px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(0,0,0,.35));color:var(--cream);display:flex;flex-direction:column;align-items:center;font-size:12px}
+.rcard.r5{background:linear-gradient(180deg,rgba(255,210,63,.28),rgba(0,0,0,.35))}
+.rcard.r4{background:linear-gradient(180deg,rgba(199,155,255,.25),rgba(0,0,0,.35))}
+.rcard img{width:80%}
+.rcard small{color:#c9d2ff;font-size:11px}
+.rstars{color:var(--gold);font-size:10px;letter-spacing:-1px}
+.rcard.inteam{outline:2px solid #7ff0b0;outline-offset:1px}
+.intag{position:absolute;top:4px;left:4px;font-size:8px;font-weight:900;background:#2fc27a;color:#062;border-radius:4px;padding:1px 4px}
+.chartop{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:center;border-radius:12px;padding:8px}
+.chartop.r5{background:linear-gradient(135deg,rgba(255,210,63,.25),rgba(0,0,0,.2))}
+.chartop.r4{background:linear-gradient(135deg,rgba(199,155,255,.22),rgba(0,0,0,.2))}
+.chartop.r3{background:linear-gradient(135deg,rgba(105,166,255,.2),rgba(0,0,0,.2))}
+.lbpips{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.lbpips i{width:14px;height:14px;border:2px solid var(--gold);transform:rotate(45deg);display:inline-block}
+.lbpips i.on{background:var(--gold);box-shadow:0 0 6px var(--gold)}
+.lbpips .note{margin-left:6px}
+.cardbtns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:12px}
+.cardbtns .gbtn{padding:10px 4px;font-size:12.5px}
+/* gacha */
+.bannerart{position:relative;height:190px;border-radius:10px;overflow:hidden;background:radial-gradient(circle at 50% 70%,rgba(255,226,120,.45),transparent 60%),linear-gradient(160deg,#3a1d6e,#16224f 60%,#0c1230);border:1.5px solid rgba(243,203,100,.6)}
+.bannerart::before{content:"";position:absolute;inset:-50%;background:repeating-conic-gradient(rgba(255,226,140,.10) 0 8deg,transparent 8deg 20deg);animation:spin 30s linear infinite}
+.bfig{position:absolute;bottom:-6px;width:38%}
+.bfig.f0{left:-2%;transform:scale(.92);filter:brightness(.9)}.bfig.f1{left:31%;width:40%;z-index:2}.bfig.f2{right:-2%;transform:scale(.92);filter:brightness(.9)}
+.btitle{position:absolute;top:10px;left:0;right:0;text-align:center;z-index:3}
+.btitle small{display:block;font-size:10px;font-weight:900;letter-spacing:.15em;color:var(--gold)}
+.btitle b{font-family:var(--display);font-size:20px;text-shadow:0 2px 6px #000}
+.gstats{display:flex;justify-content:space-between;gap:8px;margin:10px 2px;font-size:13px;color:#c9d2ff}
+.gstats b{color:var(--gold);font-variant-numeric:tabular-nums}
+.pullbtns{display:grid;grid-template-columns:1fr 1.3fr;gap:8px}
+.pullbtns .gbtn small{display:block;font-size:11px;font-weight:700;opacity:.85}
+.earn{display:flex;justify-content:space-between;gap:8px;padding:7px 2px;border-top:1px solid rgba(243,203,100,.15);font-size:13px}
+.earn:first-of-type{border-top:0}
+.earn b{color:var(--gold);font-size:12px;text-align:right}
+.gachafx{position:absolute;inset:0;z-index:35;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:16px;background:radial-gradient(circle,rgba(40,30,90,.95),rgba(4,6,20,.98));overflow:hidden}
+.gachafx.show{display:flex}
+.gf-rays{position:absolute;left:50%;top:45%;width:220vmax;height:220vmax;margin:-110vmax 0 0 -110vmax;background:repeating-conic-gradient(rgba(140,180,255,.12) 0 8deg,transparent 8deg 20deg);animation:spin 20s linear infinite}
+.gachafx.purple .gf-rays{background:repeating-conic-gradient(rgba(199,155,255,.18) 0 8deg,transparent 8deg 20deg)}
+.gachafx.gold .gf-rays{background:repeating-conic-gradient(rgba(255,215,90,.25) 0 8deg,transparent 8deg 20deg)}
+.gf-grid{position:relative;display:grid;gap:8px;width:100%;max-width:520px}
+.gf-grid.n1{grid-template-columns:minmax(0,min(55vw,220px));justify-content:center}
+.gf-grid.n10{grid-template-columns:repeat(5,minmax(0,1fr))}
+.gpull{position:relative;aspect-ratio:3/4.2;border:0;padding:0;background:none;perspective:600px;animation:dealIn .35s var(--d) both}
+@keyframes dealIn{from{transform:translateY(40px) scale(.6);opacity:0}}
+.gback,.gfront{position:absolute;inset:0;border-radius:8px;backface-visibility:hidden;transition:transform .45s;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:4px 3px 5px;overflow:hidden}
+.gback{background:linear-gradient(160deg,#2b3f9e,#121a52);border:2px solid var(--gold);color:var(--gold);font-size:22px;justify-content:center}
+.gpull.r5 .gback{box-shadow:0 0 16px 3px rgba(255,210,63,.9);animation:glow5 1s infinite alternate}
+.gpull.r4 .gback{box-shadow:0 0 12px 2px rgba(199,155,255,.9)}
+@keyframes glow5{to{box-shadow:0 0 26px 6px rgba(255,240,150,1)}}
+.gfront{transform:rotateY(180deg);border:2px solid;color:var(--cream);font-size:10px;text-align:center}
+.gpull.r3 .gfront{border-color:#69a6ff;background:linear-gradient(180deg,#2c4d8f,#101a40)}
+.gpull.r4 .gfront{border-color:#c79bff;background:linear-gradient(180deg,#5a3591,#1a1240)}
+.gpull.r5 .gfront{border-color:#ffd23f;background:linear-gradient(180deg,#9a6a12,#2a1a08);box-shadow:inset 0 0 18px rgba(255,226,120,.6)}
+.gpull.open .gback{transform:rotateY(180deg)}
+.gpull.open .gfront{transform:rotateY(360deg)}
+.gfront{padding:0}
+.gart{position:absolute;inset:0;display:block;overflow:hidden}
+.gfront.is-char .gart img{width:100%;height:100%;object-fit:cover;object-position:50% 12%;margin:0;border-radius:0;image-rendering:pixelated}
+.gfront.is-char .gart img.px{width:150%;height:auto;max-width:none;position:absolute;left:-25%;top:4%;object-fit:fill}
+.gfront.is-item .gart{display:grid;place-items:center;background:radial-gradient(circle at 50% 42%,rgba(255,255,255,.28),transparent 62%)}
+.gfront.is-item .gart img{width:68%;height:auto;margin:0 0 18%;image-rendering:pixelated;filter:drop-shadow(0 3px 4px rgba(0,0,0,.6))}
+.gpull{min-width:0}
+.gst{position:absolute;top:4px;left:50%;transform:translateX(-50%);z-index:2;white-space:nowrap;color:#ffd23f;font-size:9px;letter-spacing:-1px;padding:1px 5px;border-radius:999px;background:rgba(8,10,30,.7);text-shadow:0 0 4px rgba(255,210,63,.8)}
+.gf-grid.n1 .gst{font-size:16px;top:8px;padding:2px 10px}
+.ginfo{position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;flex-direction:column;align-items:center;gap:1px;padding:14px 3px 5px;background:linear-gradient(180deg,transparent,rgba(6,8,24,.82) 45%,rgba(6,8,24,.95));text-align:center}
+.ginfo b{font-size:10.5px;line-height:1.1;color:#fff;text-shadow:0 1px 2px #000;overflow-wrap:anywhere}
+.ginfo small{color:#c9d2ff;font-size:8.5px;line-height:1.15}
+.gf-grid.n1 .ginfo{padding:28px 8px 10px}
+.gf-grid.n1 .ginfo b{font-size:19px}
+.gf-grid.n1 .ginfo small{font-size:12.5px}
+.gnew{position:static;align-self:center;background:#ff3d6a;color:#fff;font-size:8px;font-weight:900;border-radius:4px;padding:1px 4px;margin-bottom:1px}
+.gf-grid.n1 .gnew{font-size:11px;padding:2px 7px}
+.gf-grid.n10 .ginfo{padding:8px 2px 3px;background:linear-gradient(180deg,transparent,rgba(6,8,24,.9) 40%)}
+.gf-grid.n10 .ginfo small{display:none}
+.gf-grid.n10 .ginfo b{font-size:9px}
+.gf-grid.n10 .gnew{position:absolute;top:-1px;right:2px;font-size:7px;padding:0 3px;transform:translateY(-100%)}
+.gf-grid.n10 .gfront.is-item .gart img{width:62%;margin:10% 0 26%}
+.gf-grid.n10 .gst{font-size:8px;padding:0 4px;top:3px}
+.gnew.lb{background:#2f9e6f}
+.gf-btns{position:relative;display:flex;gap:10px;width:100%;max-width:320px}
+/* battle party */
+.partyrow{position:absolute;left:2%;right:2%;bottom:2%;display:flex;justify-content:center;gap:2%;align-items:flex-end}
+.pm{width:min(26vw,110px);position:relative}
+.pm::after{content:"";position:absolute;left:15%;right:15%;bottom:-2px;height:6px;border-radius:50%;background:rgba(0,0,0,.35)}
+.pm .sprite{width:100%}
+.pm.hit{animation:shake .25s}
+.beat.atk .ring{border-color:var(--mc,var(--gold));box-shadow:0 0 12px var(--mc,var(--gold))}
+.beat.atk .tgt{border-color:var(--mc,#fff);overflow:hidden}
+.tgimg{width:70%!important;margin:14% auto 0;opacity:.85}
+.ults{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.ultbtn{position:relative;border:2px solid rgba(255,255,255,.25);border-radius:12px;background:rgba(0,0,0,.35);padding:3px 2px 2px;display:flex;flex-direction:column;align-items:center;color:var(--cream);overflow:hidden}
+.ultbtn img{width:44px;position:relative;z-index:1}
+.ultbtn small{font-size:10px;font-weight:800;position:relative;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.ug{position:absolute;inset:0;background:conic-gradient(var(--mc) var(--g,0deg),transparent 0);opacity:.45}
+.ultbtn.ready{border-color:#fff;box-shadow:0 0 14px var(--mc),0 0 0 2px var(--gold) inset;animation:glow 1s ease-in-out infinite}
+.ultbtn.ready::after{content:"ULT!";position:absolute;top:2px;right:4px;font-size:9px;font-weight:900;color:var(--gold);z-index:2;text-shadow:0 1px 2px #000}
+.ultbtn.queued{border-color:#7ff0b0}
+.ultbtn.queued::after{content:"NEXT";position:absolute;top:2px;right:4px;font-size:9px;font-weight:900;color:#7ff0b0;z-index:2}
+.ultbtn:disabled{opacity:1}
+.ctrl{grid-template-columns:1fr 1fr .9fr!important}
+.ci-hero img{width:100%}
+.pop.eff{color:#9cf5c0;font-size:16px}
+.burst.ice{background:radial-gradient(circle,#fff,#bfefff 35%,#2f7fd8 60%,transparent 70%)}
+.burst.thunder{background:radial-gradient(circle,#fff,#ffe066 35%,#7a3cc4 60%,transparent 70%)}
+.flashfx.ice{background:radial-gradient(circle at 50% 35%,rgba(220,250,255,.95),rgba(80,160,255,.5) 40%,transparent 70%)}
+.flashfx.thunder{background:radial-gradient(circle at 50% 35%,rgba(255,255,200,.95),rgba(160,90,255,.5) 40%,transparent 70%)}
+.av-big img{width:150px;margin:0 auto}
+.herotop img,.gc-art img{width:100%}
+
+.rankprev{text-align:center;font-size:13.5px;padding:8px;border-radius:8px;background:rgba(0,0,0,.3);border:1px dashed rgba(243,203,100,.4)}
+.rankprev b{font-family:var(--display);font-size:16px}
+.rankprev .c-E{color:#a9b4c7}.rankprev .c-D{color:#69a6ff}.rankprev .c-C{color:#5fe0c8}.rankprev .c-B{color:#c79bff}.rankprev .c-A{color:#ffe28a}
+.chip small{opacity:.7;font-size:10.5px}
+.qzbar{height:8px;border-radius:6px;background:rgba(0,0,0,.4);overflow:hidden}
+.qzbar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),#fff2b8);transition:width .3s}
+.gbtn.qzopt{text-align:left;padding:12px 16px;font-weight:700}
+.catchip{display:inline-block;border:1.5px solid rgba(243,203,100,.6);border-radius:999px;padding:4px 10px;font-size:13px;font-weight:700;background:rgba(0,0,0,.3)}
+.diffrow{display:grid;grid-template-columns:1fr 90px 54px;gap:8px;align-items:center;padding:5px 0;font-size:13px}
+.diffrow small{color:#aeb8e8;font-size:11px;text-align:right}
+.dbar{height:8px;border-radius:6px;background:rgba(0,0,0,.45);overflow:hidden}
+.dbar i{display:block;height:100%;background:linear-gradient(90deg,#7ff0b0,#ffd23f 50%,#ff6a6a)}
+
+.filebtn{background:none;font:inherit;width:100%}
+.camfx{position:absolute;inset:0;z-index:60;background:#000;display:flex;flex-direction:column}
+.camfx video{flex:1;width:100%;min-height:0;object-fit:cover}
+.camfx.flash::after{content:"";position:absolute;inset:0;background:#fff;animation:fadeout .3s forwards}
+.camui{padding:12px 16px 22px;background:rgba(8,12,34,.95);border-top:2px solid var(--gold)}
+.camui .note{text-align:center;margin:0 0 10px}
+.cambtns{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px}
+.cambtns .gbtn{width:auto}
+.snap{width:72px;height:72px;border-radius:50%;border:5px solid #fff;background:radial-gradient(circle,#fff 55%,rgba(255,255,255,.3) 56%);box-shadow:0 0 0 3px var(--gold)}
+.snap:active{transform:scale(.92)}
+
+.coach{position:absolute;left:10px;right:10px;bottom:90px;z-index:9;background:linear-gradient(180deg,rgba(20,30,74,.97),rgba(8,12,34,.97));border:2px solid var(--gold);border-radius:14px;padding:16px 14px 12px;box-shadow:0 0 0 4px rgba(10,16,40,.6),0 6px 18px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:8px}
+.coach[hidden]{display:none}
+.coach p{margin:0;font-size:14px;line-height:1.45}
+.coach .gbtn{align-self:flex-end;width:auto}
+.app.tutting .panel{bottom:200px}
+.tut-hl{position:relative;z-index:2;animation:tutglow 1.1s ease-in-out infinite!important;outline:3px solid #fff2b8;outline-offset:2px;border-radius:10px}
+@keyframes tutglow{50%{outline-color:transparent;box-shadow:0 0 18px 6px rgba(255,226,120,.8)}}
+.tutq{border-color:#fff2b8;box-shadow:0 0 0 4px rgba(10,16,40,.55),0 0 18px rgba(255,226,120,.5)}
+.tutlist{display:flex;flex-direction:column;gap:3px;font-size:13.5px}
+.tutlist .ok{color:#9cf5c0}
+.aiopt{border:1.5px solid rgba(243,203,100,.45);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;background:rgba(0,0,0,.25)}
+.aiopt small{color:#aeb8e8;font-size:12px}
+.aiopt a{color:var(--gold);font-weight:800;font-size:13px}
+
+.danger-zone{margin-top:12px;padding:10px;border:1.5px dashed rgba(255,110,90,.6);border-radius:10px;background:rgba(255,60,40,.06)}
+.danger-zone b{color:#ff9b8f;font-size:13px;letter-spacing:.04em}
+.gbtn.danger-solid{background:linear-gradient(180deg,#ff8f7f,#c8302c 55%,#7a1512);color:#fff;box-shadow:0 0 0 2px #ffcfc8 inset,0 3px 0 #5a0c08}
+.gbtn.danger-solid::after{display:none}
+
+.tipbtn{position:absolute;right:12px;bottom:92px;z-index:9;border:2px solid var(--gold);background:linear-gradient(180deg,#ff8eab,#d64a72);color:#fff;font-weight:800;font-size:13px;border-radius:999px;padding:7px 14px;box-shadow:0 4px 12px rgba(0,0,0,.5);animation:bob 1.6s ease-in-out infinite}
+.tipbtn[hidden]{display:none}
+
+.gslots{display:grid;gap:8px}
+.gslots.n3{grid-template-columns:repeat(3,1fr)}.gslots.n2{grid-template-columns:repeat(2,1fr)}
+.gslot{border:2px solid rgba(243,203,100,.55);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(0,0,0,.35));color:var(--cream);padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;min-height:132px}
+.gslot .gs-l{font-size:10px;font-weight:900;letter-spacing:.1em;color:var(--gold);text-transform:uppercase}
+img.px.gsico{width:48px;height:48px;margin:4px 0}
+.gs-empty{width:48px;height:48px;margin:4px 0;border:2px dashed rgba(243,203,100,.5);border-radius:10px;display:grid;place-items:center;color:var(--gold);font-size:22px}
+.gslot b{font-size:12.5px;line-height:1.2}
+.gslot small{font-size:10.5px;color:#aeb8e8;line-height:1.25}
+.gpf{justify-content:center}
+.gplist{display:flex;flex-direction:column;gap:6px;max-height:52vh;overflow:auto}
+.gprow{display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center;padding:8px;border:1.5px solid rgba(243,203,100,.25);border-radius:10px;background:rgba(0,0,0,.25)}
+.gprow.on{border-color:#7ff0b0;background:rgba(60,200,140,.1)}
+img.px.gpico{width:36px;height:36px}
+.gprow b{display:block;font-size:13.5px}
+.gprow small{display:block;font-size:11.5px;color:#aeb8e8}
+.gprow small.st-on{color:#7ff0b0}.gprow small.st-off{color:#ff9b8f}
+.eqtag{font-size:11px;font-weight:900;color:#7ff0b0;padding:4px 8px;border:1.5px solid #7ff0b0;border-radius:999px}
+.eqtag.off{color:#ff9b8f;border-color:#ff9b8f}
+.lpop{position:absolute;inset:0;z-index:50;background:rgba(4,6,20,.55);cursor:pointer}
+.lpop[hidden]{display:none}
+.lp-art{position:absolute;left:-16%;bottom:150px;width:78%;max-width:380px;animation:lpIn .35s ease-out;pointer-events:none}
+.lp-art svg,.lp-art .lilia-stack{width:100%;height:auto;display:block}
+@keyframes lpIn{from{transform:translateX(-30px);opacity:0}}
+.lp-box{position:absolute;left:10px;right:10px;bottom:96px;background:linear-gradient(180deg,rgba(20,30,74,.97),rgba(8,12,34,.97));border:2px solid var(--gold);border-radius:14px;padding:18px 16px 12px;box-shadow:0 0 0 4px rgba(10,16,40,.6),0 6px 18px rgba(0,0,0,.6);animation:pop .3s ease-out}
+.lp-box p{margin:0 0 6px;font-size:15px;line-height:1.5}
+.lp-box .tap{display:block;text-align:right;font-size:11px;color:var(--gold)}
+.flashsec{animation:flashsec 1.6s ease-out}
+@keyframes flashsec{0%,40%{box-shadow:0 0 0 3px var(--gold),0 0 24px rgba(243,203,100,.6)}}
+.tixbox{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:10px;padding:10px;border:1.5px solid rgba(243,203,100,.35);border-radius:10px;background:rgba(0,0,0,.25)}
+.tixbox small{display:block;font-size:11px;color:#aeb8e8;margin-top:2px}
+.tixbtns{display:flex;flex-direction:column;gap:4px}
+.starterbnr{margin:10px 0 2px;padding:10px 12px;border-radius:12px;text-align:center;background:linear-gradient(90deg,rgba(255,224,102,.22),rgba(255,157,180,.22),rgba(255,224,102,.22));border:2px solid #ffe066;box-shadow:0 0 14px rgba(255,224,102,.35);animation:sbGlow 2s ease-in-out infinite}
+.starterbnr .sb-t{display:block;font-family:var(--display);letter-spacing:.12em;color:#ffe066;font-size:14px;margin-bottom:3px}
+.starterbnr span{font-size:12.5px;line-height:1.45}.starterbnr span b{color:#fff3c4}
+@keyframes sbGlow{50%{box-shadow:0 0 22px rgba(255,224,102,.65)}}
+.freetag{display:inline-block;margin-left:4px;padding:1px 6px;border-radius:999px;background:#7ff0b0;color:#0b2a1c;font-size:10px;font-weight:900;vertical-align:middle}
+.gf-note{position:relative;z-index:2;margin:6px 16px 0;text-align:center;font-size:12.5px;color:#fff3c4}
+.gf-pair{display:flex;gap:8px;width:100%}.gf-pair .gbtn{flex:1}
+.fdots{display:block;font-size:11px;letter-spacing:2px;color:var(--gold)}
+
+.pc{display:flex;flex-direction:column;gap:10px}
+.pc-stage{position:relative;align-self:center;width:170px;height:170px;border-radius:50%;background:radial-gradient(circle,rgba(255,240,200,.22),rgba(255,240,200,.04) 62%,transparent 70%);display:grid;place-items:center}
+.pc-stage img{width:150px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5))}
+.pc-nm{position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);white-space:nowrap;font-weight:900;font-size:13px;padding:2px 12px;border-radius:999px;background:rgba(10,16,40,.85);border:1.5px solid var(--gold);color:#fff3c4}
+.pc-row{display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;padding:4px 2px 8px;scroll-snap-type:x proximity;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.pc-row > *{flex:0 0 auto;scroll-snap-align:center}
+.pc-cats{gap:6px;padding-bottom:6px;border-bottom:1.5px solid rgba(243,203,100,.25)}
+.pc-cat{position:relative;min-width:62px;border:1.5px solid rgba(243,203,100,.3);border-radius:10px;background:rgba(0,0,0,.3);color:var(--cream);font-size:10.5px;font-weight:800;padding:5px 6px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.pc-cat span{font-size:18px;line-height:1.1}
+.pc-cat.on{border-color:var(--gold);background:linear-gradient(180deg,rgba(243,203,100,.4),rgba(243,203,100,.12));color:#fff}
+.pc-cat.todo::after{content:"";position:absolute;top:3px;right:4px;width:7px;height:7px;border-radius:50%;background:#ff6f6f;box-shadow:0 0 6px #ff6f6f}
+.pc-panel{min-height:176px;display:flex;flex-direction:column;gap:4px}
+.pc-opt{position:relative;width:78px;border:2px solid rgba(243,203,100,.25);border-radius:12px;background:rgba(255,255,255,.06);color:var(--cream);padding:5px 4px 4px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.pc-opt small{font-size:10px;font-weight:700;line-height:1.15;text-align:center;color:#c9d0f2}
+.pc-opt.on{border-color:var(--gold);background:rgba(243,203,100,.18);box-shadow:0 0 10px rgba(243,203,100,.35)}
+.pc-opt.on::after{content:"✓";position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--gold);color:#1b1026;font-size:11px;font-weight:900;display:grid;place-items:center}
+.pc-img{display:block;width:66px;height:66px;border-radius:8px;background-color:rgba(10,16,40,.55);background-repeat:no-repeat;image-rendering:pixelated}
+.pc-cols{gap:10px;padding:6px 4px 8px}
+.pc-cols .sw{width:34px;height:34px}
+.pc-card{width:150px;text-align:left;border:2px solid rgba(243,203,100,.25);border-radius:12px;background:rgba(255,255,255,.06);color:var(--cream);padding:8px 10px;white-space:normal}
+.pc-card b{display:block;font-size:13.5px;margin-bottom:3px}.pc-card small{font-size:11.5px;color:#c9d0f2;line-height:1.35}
+.pc-card.on{border-color:var(--gold);background:rgba(243,203,100,.18)}
+.pc-desc{margin:2px 0 0;text-align:center}
+.pc-name{padding:14px 6px}
+.cr-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cr-btns .gbtn:last-child{grid-column:1/-1}
+.nameinput{font-size:16px}
+
+.pf-check{margin-top:14px;display:grid;grid-template-columns:92px 1fr;gap:8px;align-items:end}
+.pf-lilia{width:92px;height:150px;overflow:hidden;align-self:stretch;display:flex;align-items:flex-start}
+.pf-lilia > *{width:150px;margin-left:-28px}
+.pf-lilia svg,.pf-lilia img,.pf-lilia .lilia-stack{width:150px;height:auto}
+.pf-bubble{position:relative;padding:16px 12px 10px;border-radius:12px;border:2px solid var(--gold);background:linear-gradient(180deg,rgba(20,30,74,.95),rgba(8,12,34,.95))}
+.pf-bubble p{margin:0 0 6px;font-size:13.5px;line-height:1.4}
+.pf-pick{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}
+.pf-pick span{padding:5px 10px;border-radius:999px;background:rgba(243,203,100,.18);border:1.5px solid rgba(243,203,100,.6);font-weight:800;font-size:13px}
+.pf-pick small{font-weight:600;color:#c9d0f2}
+.pf-why{font-size:12px!important;color:#c9d0f2;font-style:italic}
+.pf-lock{font-size:13px;padding:8px 10px;border-radius:10px;border:1.5px dashed rgba(243,203,100,.6);background:rgba(0,0,0,.25)}
+.pf-diff{margin:0;font-size:12px;color:#ffd27a;text-align:center}
+
+.privacy{background:rgba(4,6,20,.75);align-items:center;justify-content:center;padding:20px}
+.pv-card{max-width:340px;border:2px solid var(--gold);border-radius:14px;padding:16px;background:linear-gradient(180deg,#141c45,#0b1130);text-align:center;animation:pop .25s ease-out}
+.pv-ico{font-size:34px;margin-bottom:6px}
+.pv-card p{margin:0 0 12px;font-size:14px;line-height:1.45}.pv-card small{color:#ffd27a}
+.pv-btns{display:grid;grid-template-columns:1fr 1.4fr;gap:8px}
+.censor{background:#0b1130;padding:12px;gap:10px}
+.cz-tip{margin:0;text-align:center;font-size:13px;color:#ffd27a}
+.cz-wrap{flex:1;min-height:0;display:grid;place-items:center}
+.cz-wrap canvas{max-width:100%;max-height:100%;border-radius:8px;touch-action:none;box-shadow:0 0 0 2px var(--gold)}
+.cz-tools{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap}
+.cz-tools span{font-size:12px;font-weight:800;color:var(--gold)}
+.rules{margin:4px 0;padding-left:22px;display:flex;flex-direction:column;gap:8px;font-size:13.5px;line-height:1.45}
+.rulechk{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;padding:10px;border:1.5px solid rgba(243,203,100,.5);border-radius:10px;background:rgba(0,0,0,.25)}
+.rulechk input{width:20px;height:20px;flex:0 0 auto;margin-top:1px;accent-color:var(--gold)}
+
+.stlist{display:flex;flex-direction:column;gap:8px}
+.stch{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:12px 14px;border-radius:12px;border:2px solid rgba(243,203,100,.5);background:linear-gradient(135deg,rgba(243,203,100,.16),rgba(0,0,0,.3));color:var(--cream)}
+.stch .st-n{font-size:11px;font-weight:900;letter-spacing:.12em;color:var(--gold);text-transform:uppercase}
+.stch b{font-family:var(--display);font-size:17px}
+.stch small{font-size:12px;color:#c9d0f2}
+.stch.locked{opacity:.55;border-color:rgba(255,255,255,.2)}
+.stch.done{border-color:#7ff0b0}
+.st-draft{font-size:9px;padding:1px 6px;border-radius:999px;background:#ff9b8f;color:#2a0d10;letter-spacing:.05em}
+.title{position:absolute;inset:0;z-index:80;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;overflow:hidden;background:#000;transition:opacity .7s}
+.title>*{transition:opacity .6s}
+.title.out>*{opacity:0}
+.title.out{pointer-events:none}
+.title.gone{opacity:0}
+.titling .modal{z-index:90}
+.shotreq{background:rgba(127,216,255,.1);border:1px solid rgba(127,216,255,.45);border-radius:10px;padding:8px 10px;font-size:13.5px;line-height:1.45;color:var(--cream)}
+.orb.teal .ring{background:radial-gradient(circle at 40% 30%,#8ff0e0,#1f8a86 70%);box-shadow:0 0 12px rgba(120,240,220,.55),inset 0 0 0 2px rgba(255,255,255,.3)}
+.side.tutting .tut-off{display:none}
+.studynote{display:flex;flex-direction:column;gap:4px;font-size:13.5px}
+.studynote small{color:#aeb8e8;font-weight:400}
+.studynote textarea,.jn-write textarea{width:100%;min-height:84px;resize:vertical;border-radius:10px;border:1.5px solid rgba(243,203,100,.45);background:rgba(8,12,34,.7);color:var(--cream);padding:8px 10px;font:inherit;font-size:14px;box-sizing:border-box}
+.sn-hint{color:#aeb8e8}.sn-hint.ok{color:#9cf5c0;font-weight:700}
+/* focus timer */
+.focus{position:absolute;inset:0;z-index:40;display:none;flex-direction:column;align-items:center;gap:14px;padding:18px 18px 24px;overflow-y:auto;
+  background:radial-gradient(circle at 50% 30%,#1f3a4a,#0b1826 70%)}
+.focus.show{display:flex}
+.fc-top{width:100%;display:flex;justify-content:space-between;align-items:center}
+.fc-title{font-family:var(--display);font-weight:900;font-size:20px;color:#9cf0e0;letter-spacing:.05em}
+.fc-x{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:var(--cream);border-radius:999px;padding:6px 12px;font-weight:700}
+.fc-quest{background:rgba(156,240,224,.12);border:1px solid rgba(156,240,224,.4);border-radius:999px;padding:5px 14px;font-size:13.5px;font-weight:700}
+.fc-modes{display:flex;gap:8px}
+.fc-modes button,.fc-chips button{background:rgba(255,255,255,.06);border:1.5px solid rgba(156,240,224,.35);color:var(--cream);border-radius:999px;padding:7px 14px;font-weight:700}
+.fc-modes button.on,.fc-chips button.on{background:#1f8a86;border-color:#9cf0e0}
+.fc-ring{width:210px;height:210px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#9cf0e0 var(--p),rgba(255,255,255,.08) 0);box-shadow:0 0 30px rgba(120,240,220,.25)}
+.fc-ring.brk{background:conic-gradient(#ffd07a var(--p),rgba(255,255,255,.08) 0)}
+.fc-ring>div{width:180px;height:180px;border-radius:50%;background:#0f2130;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.fc-ring small{color:#9cf0e0;font-weight:800;letter-spacing:.06em;text-transform:uppercase;font-size:12px}
+.fc-ring.brk small{color:#ffd07a}
+.fc-ring b{font-family:var(--display);font-size:46px;font-weight:900;font-variant-numeric:tabular-nums}
+.fc-set{display:flex;flex-direction:column;gap:8px;width:100%;max-width:300px}
+.fc-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.fc-step{display:grid;grid-template-columns:1fr 36px 44px 36px;align-items:center;gap:6px;font-size:14px}
+.fc-step button{height:34px;border-radius:10px;border:1.5px solid rgba(156,240,224,.4);background:rgba(255,255,255,.06);color:var(--cream);font-size:18px;font-weight:800}
+.fc-step button:disabled{opacity:.35}
+.fc-step b{text-align:center;font-size:17px}
+.fc-btns{display:flex;flex-direction:column;gap:8px;width:100%;max-width:300px}
+.fc-music{background:none;border:1px solid rgba(255,255,255,.2);color:#aeb8e8;border-radius:999px;padding:6px 14px;font-size:13px}
+.fc-music.on{color:#9cf0e0;border-color:rgba(156,240,224,.5)}
+.fc-note{text-align:center;margin:0}
+.fc-pill{position:absolute;top:84px;left:50%;transform:translateX(-50%);z-index:12;background:#1f8a86;color:#fff;border:2px solid #9cf0e0;border-radius:999px;padding:5px 14px;font-weight:800;font-variant-numeric:tabular-nums;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+/* journal */
+.jn-tabs{display:flex;gap:6px;margin-bottom:10px}
+.jn-tabs button{flex:1;background:rgba(255,255,255,.06);border:1.5px solid rgba(243,203,100,.35);color:var(--cream);border-radius:999px;padding:7px 6px;font-weight:700;font-size:13px}
+.jn-tabs button.on{background:rgba(243,203,100,.22);border-color:var(--gold)}
+.jn-body{display:flex;flex-direction:column;gap:10px}
+.jn-write{display:flex;flex-direction:column;gap:8px}
+.jn-day h4{margin:4px 0 6px;font-family:var(--display);color:var(--gold);font-size:14px;letter-spacing:.04em;border-bottom:1px solid rgba(243,203,100,.25);padding-bottom:3px}
+.jn-e{display:grid;grid-template-columns:24px 1fr auto;gap:8px;align-items:start;padding:6px 2px;font-size:13.5px}
+.jn-e .jn-i{font-size:16px;text-align:center}
+.jn-e b{display:block}
+.jn-e p{margin:2px 0;white-space:normal;word-break:break-word}
+.jn-e small{color:#aeb8e8;font-size:11.5px}
+.jn-e.jnote p{font-style:italic}
+.jn-e.js{background:rgba(156,240,224,.07);border-radius:8px}
+.jn-r{text-align:right;font-size:11.5px;color:#ffe08a;font-weight:700}
+.jn-del{background:none;border:0;color:#8f96c8;font-size:13px;padding:2px 4px}
+.jn-del.sure{color:#ff8f8f;font-weight:800}
+.jc-head{display:flex;justify-content:space-between;align-items:center}
+.jc-head b{font-family:var(--display);font-size:16px}
+.jc-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.jc-grid .dow{text-align:center;font-size:11px;color:#aeb8e8;font-weight:800}
+.jc-d{aspect-ratio:1/1.05;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:var(--cream);padding:2px;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}
+.jc-d b{font-size:12px}
+.jc-d.has{background:rgba(127,240,176,.12);border-color:rgba(127,240,176,.4)}
+.jc-d.today{border:2px solid var(--gold)}
+.jc-d.pick{background:rgba(243,203,100,.25)}
+.jc-m{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1px;font-size:9px;line-height:1.2}
+.jc-m i{font-style:normal}
+.jc-m i.q{background:#2f9e6f;color:#fff;border-radius:999px;padding:0 4px;font-weight:800}
+.jc-m i.due.late{filter:hue-rotate(-40deg) saturate(2)}
+.jc-key{text-align:center;margin:0;font-size:11.5px}
+.jn-e.jd b{color:#ffd07a}
+.nt-subs{transition:opacity .2s}
+.nt-subs.off{opacity:.38;filter:grayscale(1)}
+.nt-subs.off .toggle,.nt-subs.off input{pointer-events:none}
+.nt-time{background:rgba(8,12,34,.7);border:1.5px solid var(--gold);color:var(--cream);border-radius:8px;padding:5px 8px;font:inherit;font-size:14px;color-scheme:dark}
+.nt-warn{margin:8px 0 0;color:#ffb0a0!important}
+.libtitle{flex:1;font-family:var(--display);font-weight:900;font-size:19px;color:#9cf0e0;text-shadow:0 2px 4px #000;padding-left:6px}
+.libcards{display:flex;flex-direction:column;gap:10px}
+.libcard{display:grid;grid-template-columns:48px 1fr 18px;gap:10px;align-items:center;text-align:left;width:100%;background:linear-gradient(180deg,rgba(31,138,134,.22),rgba(10,30,40,.5));border:1.5px solid rgba(156,240,224,.45);border-radius:12px;padding:12px;color:var(--cream)}
+.libcard .li-i{font-size:30px;text-align:center}
+.libcard b{display:block;font-size:16px}
+.libcard small{color:#b8c6e8;font-size:12.5px}
+.libcard em{display:block;font-style:normal;color:#9cf0e0;font-size:12px;font-weight:700;margin-top:2px}
+.libcard .li-go{font-size:24px;color:#9cf0e0}
+.adearn{align-items:center}
+.adearn small{display:block;color:#aeb8e8;font-size:11.5px;font-weight:400}
+.chk18{display:flex;flex-direction:row!important;justify-content:center;align-items:center;gap:10px;color:var(--cream)!important;font-weight:700;font-size:15px;padding:8px 2px;cursor:pointer}
+.chk18 input{width:22px;height:22px;accent-color:var(--gold)}
+.inspage{position:fixed;inset:0;z-index:200;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#2a2160,#0b0a1e 70%);overflow:auto}
+.ip-card{width:100%;max-width:380px;background:rgba(15,20,48,.95);border:2px solid var(--gold);border-radius:18px;padding:22px 18px;text-align:center;display:flex;flex-direction:column;gap:10px;color:var(--cream)}
+.ip-ic{font-size:44px}
+.ip-card h2{margin:0;font-family:var(--display);color:var(--gold)}
+.ip-card p{margin:0}
+.ip-q{font-size:18px;font-weight:800;background:rgba(243,203,100,.12);border-radius:10px;padding:10px}
+.ip-sub{color:#b8c0e8;font-size:13.5px}
+.ip-card .gbtn{display:block;text-decoration:none;padding:14px;font-size:17px}
+.ip-card small{color:#8088b8;margin-top:6px}
+.tourpop{position:absolute;left:10px;right:10px;bottom:84px;z-index:45;background:rgba(14,18,44,.97);border:2px solid var(--rose);border-radius:14px;padding:12px 14px 12px;box-shadow:0 6px 24px rgba(0,0,0,.6);animation:sheetUp .3s ease-out;display:flex;flex-direction:column;gap:8px}
+.tourpop .tp-who{position:absolute;top:-12px;left:14px;background:var(--rose);color:#fff;font-weight:800;font-size:12px;padding:2px 10px;border-radius:999px}
+.tourpop p{margin:4px 0 0;font-size:14px;line-height:1.45}
+.tourpop .gbtn{align-self:flex-end}
+.ghow{display:block;color:#9fb0e0!important;font-size:11.5px!important;margin-top:2px}
+.bootq{border-color:#a07850!important}
+.buffpick{display:grid;grid-template-columns:34px 1fr;gap:8px;align-items:center;text-align:left;width:100%;background:rgba(255,255,255,.05);border:1.5px solid rgba(243,203,100,.4);border-radius:10px;padding:8px 10px;color:var(--cream)}
+.buffpick>span:first-child{font-size:24px;text-align:center}
+.buffpick b{display:block}.buffpick small{color:#b8c0e8;font-size:12px}
+/* basket */
+.gfield-basket,.gfield-fish,.gfield-cart{touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden}
+.gbasket{position:absolute;bottom:5%;left:50%;transform:translateX(-50%);font-size:52px;line-height:1;filter:drop-shadow(0 4px 4px rgba(0,0,0,.4));pointer-events:none}
+.gbasket.hurt{animation:gShake .35s}
+.gfall{position:absolute;transform:translate(-50%,-50%);font-size:30px;pointer-events:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+.gfall.rare{filter:drop-shadow(0 0 8px #ffe066)}
+.gcombo{position:absolute;top:12%;right:4%;font-weight:900;color:#ffe066;text-shadow:0 2px 3px #000;font-size:16px;pointer-events:none}
+@keyframes gShake{25%{transform:translateX(-62%) rotate(-8deg)}75%{transform:translateX(-38%) rotate(8deg)}}
+/* fishing */
+.fbob{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);font-size:40px;transition:top .4s;pointer-events:none}
+.fbob.cast{top:62%;animation:fBob 1.4s ease-in-out infinite}
+.fbob.bite{top:64%;animation:fBite .18s linear infinite}
+@keyframes fBob{50%{transform:translate(-50%,-44%)}}
+@keyframes fBite{50%{transform:translate(-50%,-38%) rotate(10deg)}}
+.fmsg{position:absolute;left:0;right:0;bottom:8%;text-align:center;font-weight:800;color:#fff;text-shadow:0 2px 4px #000;font-size:15px;padding:0 12px;pointer-events:none}
+.freel{position:absolute;right:8%;top:10%;height:62%;width:58px;background:rgba(10,30,50,.7);border:2px solid #9cf0e0;border-radius:12px;pointer-events:none}
+.fzone{position:absolute;left:3px;right:3px;height:30%;background:rgba(156,240,224,.25);border:2px solid rgba(156,240,224,.6);border-radius:8px}
+.fzone.on{background:rgba(127,240,176,.45);border-color:#7ff0b0}
+.ffish{position:absolute;left:50%;transform:translate(-50%,-50%);font-size:26px}
+.fprog{position:absolute;right:-14px;top:0;bottom:0;width:8px;background:rgba(255,255,255,.15);border-radius:4px;display:flex;align-items:flex-end}
+.fprog i{display:block;width:100%;background:linear-gradient(#ffe066,#7ff0b0);border-radius:4px}
+/* dig site */
+.gfield-dig{display:flex;align-items:center;justify-content:center;padding:10px}
+.dgrid{display:grid;gap:3px;width:100%;max-width:420px;aspect-ratio:7/8}
+.dtile{border:0;border-radius:6px;padding:0;min-height:0;min-width:0;overflow:hidden;line-height:1;font-size:clamp(20px,6vw,30px);display:grid;place-items:center;cursor:pointer;position:relative;box-shadow:inset 0 -3px 0 rgba(0,0,0,.35),inset 0 2px 0 rgba(255,255,255,.12)}
+.dtile.l3{background:#4a3d36}.dtile.l2{background:#75614f}.dtile.l1{background:#a8906e}
+.dtile.l3::after,.dtile.l2::after{content:"";position:absolute;inset:0;border-radius:6px;background:repeating-linear-gradient(35deg,transparent 0 7px,rgba(0,0,0,.12) 7px 9px)}
+.dtile.empty{background:rgba(20,14,12,.55);box-shadow:inset 0 2px 6px rgba(0,0,0,.6);cursor:default}
+.dtile.open{background:rgba(120,200,255,.18);box-shadow:inset 0 0 10px rgba(156,240,224,.35)}
+.dtile.open.got{background:rgba(127,240,176,.25)}
+.dtile.hint::before{content:"✦";position:absolute;top:2px;right:4px;font-size:10px;color:#fff6c0;opacity:.55;animation:tiPulse 2.4s ease-in-out infinite;z-index:1}
+.dtile.thunk{animation:dThunk .18s}
+@keyframes dThunk{50%{transform:scale(.9)}}
+.dcrack{display:flex;align-items:center;gap:8px;padding:4px 12px 0;font-size:12px;color:#c8b8a8}
+.dbar{flex:1;height:10px;background:rgba(255,255,255,.1);border-radius:6px;overflow:hidden}
+.dbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#d6a83a,#e0573f);transition:width .2s}
+.dbar i.danger{animation:tiPulse .6s ease-in-out infinite}
+.dtools{display:flex;gap:8px;width:100%}
+.dtool{flex:1;background:rgba(255,255,255,.06);border:1.5px solid rgba(243,203,100,.35);color:var(--cream);border-radius:10px;padding:6px;font-weight:800;font-size:14px}
+.dtool small{display:block;font-weight:400;font-size:11px;color:#b8c0e8}
+.dtool.on{background:rgba(243,203,100,.25);border-color:var(--gold)}
+.cavein{animation:caveIn .6s}
+@keyframes caveIn{20%{transform:translate(-6px,3px)}40%{transform:translate(6px,-3px)}60%{transform:translate(-4px,2px)}80%{transform:translate(3px,-1px)}}
+.ti-menu{position:relative;display:flex;flex-direction:column;align-items:center;gap:12px}
+.ti-link{background:none;border:0;color:#cfc6ff;font-size:14px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:6px}
+.ti-art{position:absolute;inset:0;background:url(art/title.png) center/cover no-repeat,radial-gradient(circle at 50% 30%,#3b2a6e,#160f30 60%,#0a0716)}
+.ti-glow{position:absolute;inset:0;background:radial-gradient(circle at 50% 38%,rgba(243,203,100,.25),transparent 55%);animation:tiPulse 3s ease-in-out infinite}
+.ti-logo{position:relative;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px;animation:tiDrop .8s cubic-bezier(.2,1.4,.4,1) both}
+.ti-logo small{font-family:var(--display);font-weight:900;font-size:18px;letter-spacing:.25em;color:#ffd6e4;text-shadow:0 2px 0 #7a2346,0 0 12px rgba(255,142,171,.6)}
+.ti-logo b{font-family:var(--display);font-weight:900;font-size:44px;line-height:1;color:#ffe08a;letter-spacing:.03em;
+  text-shadow:0 3px 0 #a8701a,0 6px 0 #5a3508,0 0 24px rgba(243,203,100,.6)}
+.ti-sub{margin-top:10px;font-size:13px;color:#cfc6ff;opacity:.9}
+.ti-mons{position:relative;display:flex;gap:18px}
+.ti-mons span{width:54px;height:54px;display:block;animation:tiBob 1.6s ease-in-out infinite}
+.ti-mons span:nth-child(2){animation-delay:.25s}.ti-mons span:nth-child(3){animation-delay:.5s}
+.ti-mons svg{width:100%;height:100%}
+.ti-start{position:relative;border:2px solid var(--gold);background:linear-gradient(180deg,#ff8eab,#d64a72);color:#fff;font-family:var(--display);font-weight:900;font-size:17px;
+  letter-spacing:.06em;padding:12px 28px;border-radius:999px;box-shadow:0 4px 0 #7a2346,0 0 18px rgba(255,142,171,.55);animation:tiBlink 1.4s ease-in-out infinite;cursor:pointer}
+.ti-ver{position:absolute;bottom:18px;color:#8f86b8;font-size:11px}
+@keyframes tiPulse{50%{opacity:.55}}
+@keyframes tiBob{50%{transform:translateY(-8px)}}
+@keyframes tiBlink{50%{transform:scale(1.05);box-shadow:0 4px 0 #7a2346,0 0 28px rgba(255,142,171,.85)}}
+@keyframes tiDrop{from{transform:translateY(-40px) scale(.8);opacity:0}}
+.vn{position:absolute;inset:0;z-index:58;background:radial-gradient(circle at 50% 35%,#2b3a7a,#0b1130 70%);cursor:pointer;overflow:hidden}
+.vn-bg{position:absolute;inset:0;transition:background .4s;overflow:hidden}
+.vn-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.35))}
+.vn-deco{position:absolute;right:8%;top:14%;font-size:72px;opacity:.28;filter:blur(.5px)}
+.vn-place{position:absolute;top:12px;left:12px;z-index:3;padding:5px 12px;border-radius:999px;background:rgba(8,12,34,.75);border:1.5px solid rgba(243,203,100,.6);color:#fff3c4;font-size:12px;font-weight:800;opacity:0}
+.vn-place.show{animation:placeIn 2.6s ease forwards}
+@keyframes placeIn{0%{opacity:0;transform:translateY(-6px)}12%,75%{opacity:1;transform:none}100%{opacity:.55}}
+.vn-skip{position:absolute;top:12px;right:12px;z-index:3;border:1.5px solid rgba(255,255,255,.4);background:rgba(0,0,0,.4);color:#fff;border-radius:999px;padding:6px 12px;font-weight:800;font-size:12px}
+.vn-art{position:absolute;bottom:56px;width:84%;max-width:390px;transition:left .25s,right .25s;pointer-events:none;z-index:1}
+.vn-emote{position:absolute;z-index:2;top:4%;right:16%;width:16%;max-width:62px;aspect-ratio:1;opacity:0;pointer-events:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+.vn-emote svg{width:100%;height:100%;display:block}
+.vn-art.right .vn-emote{right:auto;left:16%}
+.vn-art.pxs .vn-emote{top:-2%;right:8%}.vn-art.pxs.right .vn-emote{right:auto;left:8%}
+.vn-emote.show{animation:emoteIn .35s cubic-bezier(.3,1.6,.5,1) forwards}
+.vn-emote.show.e-gloom{animation:emoteIn .35s ease-out forwards, gloomDrift 2s ease-in-out .35s infinite}
+.vn-emote.show.e-anger{animation:emoteIn .3s cubic-bezier(.3,1.6,.5,1) forwards, angerPulse .6s ease-in-out .3s infinite}
+.vn-emote.show.e-sweat{animation:emoteIn .35s ease-out forwards, sweatSlide 1.8s ease-in .35s infinite}
+.vn-emote.show.e-zzz,.vn-emote.show.e-note{animation:emoteIn .35s ease-out forwards, floatUp 1.8s ease-in-out .35s infinite}
+@keyframes emoteIn{from{opacity:0;transform:scale(.3) translateY(10px)}to{opacity:1;transform:none}}
+@keyframes angerPulse{50%{transform:scale(1.18)}}
+@keyframes sweatSlide{0%{transform:none}80%{transform:translateY(8px)}100%{transform:translateY(8px);opacity:.4}}
+@keyframes floatUp{50%{transform:translateY(-6px)}}
+@keyframes gloomDrift{50%{transform:translateY(3px);opacity:.75}}
+.vn-art.pxs{bottom:110px;width:70%}
+.vn-art.glow{filter:drop-shadow(0 0 18px rgba(255,240,180,.75))}
+.vn-art.left{left:-6%}.vn-art.right{right:-6%}
+.vn-art img,.vn-art svg,.vn-art .lilia-stack{width:100%;height:auto;display:block;image-rendering:pixelated}
+.vn-box{position:absolute;z-index:2;left:10px;right:10px;bottom:20px;min-height:140px;padding:20px 16px 14px;border-radius:14px;border:2px solid var(--gold);background:linear-gradient(180deg,#141e4a,#080c22);box-shadow:0 0 0 4px rgba(10,16,40,.6)}
+.vn-box p{margin:0;font-size:15.5px;line-height:1.55}.vn-box p.narr{font-style:italic;color:#c9d0f2;text-align:center}
+.vn-box .tap{position:absolute;right:14px;bottom:8px;color:var(--gold);animation:bob 1s ease-in-out infinite}
+.vn-ch{display:flex;flex-direction:column;gap:8px;margin-top:10px}.vn-ch:empty{display:none}
+@keyframes bob{50%{transform:translateY(3px)}}
+.board{display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:repeat(7,1fr);gap:3px;aspect-ratio:1;margin:6px 0}
+.cell{position:relative;display:grid;place-items:center;border-radius:7px;font-size:clamp(14px,4.6vw,20px);background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.15)}
+.cell.c-start{background:color-mix(in srgb,var(--ev) 45%,transparent);border-color:var(--ev)}
+.cell.c-chest{border-color:#ffd166}.cell.c-back{background:rgba(255,111,111,.15)}.cell.c-die{background:rgba(127,216,255,.15)}
+.cell.here{box-shadow:0 0 0 2px #fff,0 0 12px var(--ev);z-index:2}
+.token{position:absolute;inset:-30% -10% auto;display:grid;place-items:center;animation:pop .2s ease-out;pointer-events:none}
+img.px.tok{width:130%;max-width:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.8))}
+.bcenter{grid-column:2/7;grid-row:2/7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:12px;background:radial-gradient(circle,color-mix(in srgb,var(--ev) 25%,transparent),transparent 70%)}
+.dicecount{font-size:18px;font-weight:900}.dicecount small{display:block;font-size:10.5px;text-align:center;color:#c9d0f2;font-weight:700}
+.die{font-size:46px;line-height:1}.die.rolled{animation:pop .3s ease-out}
+.bcenter .gbtn{width:auto;padding-left:26px;padding-right:26px}
+.lapnow{font-size:11px;color:#c9d0f2}
+.laps{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 6px}
+.lapr{flex:0 0 auto;width:84px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;border-radius:10px;border:1.5px solid rgba(243,203,100,.35);background:rgba(0,0,0,.25);text-align:center}
+.lapr small{font-size:9.5px;font-weight:900;color:var(--gold);letter-spacing:.08em}.lapr b{font-size:20px}.lapr span{font-size:10px;line-height:1.2}
+.lapr em{font-style:normal;font-size:8.5px;font-weight:900;color:#ff9db4;letter-spacing:.06em}
+.lapr.got{opacity:.5;border-color:#7ff0b0}.lapr.got::after{content:"✔";color:#7ff0b0;font-weight:900}
+img.px.lapico{width:28px;height:28px}
+
+.advmenu{display:flex;flex-direction:column;gap:12px;padding-top:4px}
+.advcard{position:relative;border-radius:16px;border:2px solid rgba(243,203,100,.6);color:var(--cream);overflow:hidden;box-shadow:0 6px 14px rgba(0,0,0,.45)}
+.advcard.big{display:flex;align-items:center;gap:14px;min-height:112px;padding:16px;text-align:left}
+.advcard.story{background:linear-gradient(120deg,#3a2a7c,#1b2257 55%,#0f1538),radial-gradient(circle at 85% 20%,rgba(255,224,140,.35),transparent 60%);background-blend-mode:screen}
+.advcard.event{border-color:var(--ev);background:linear-gradient(120deg,color-mix(in srgb,var(--ev) 55%,#1b2257),#141a44 70%)}
+.ac-ico{font-size:46px;line-height:1;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))}
+.ac-txt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ac-txt small{font-size:10.5px;font-weight:900;letter-spacing:.14em;color:var(--gold)}
+.ac-txt b{font-family:var(--display);font-size:20px;line-height:1.15}
+.ac-txt em{font-style:normal;font-size:12.5px;color:#c9d0f2}
+.ac-badge{position:absolute;top:10px;right:10px;padding:3px 9px;border-radius:999px;background:#ff6f91;color:#fff;font-size:11px;font-weight:900;box-shadow:0 0 10px rgba(255,111,145,.6)}
+.advrow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.advcard.small{display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 8px 12px;min-height:132px}
+.advcard.hunt{background:linear-gradient(160deg,#7a2a3a,#2a1430)}
+.advcard.gather{background:linear-gradient(160deg,#2a6a40,#13301f)}
+.advcard.small b{font-family:var(--display);font-size:18px}.advcard.small em{font-style:normal;font-size:11.5px;color:#d7dcf5}
+img.px.advmon{width:64px;height:64px}
+.advcard:active{transform:scale(.98)}
+.advback{align-self:flex-start;width:auto;margin-bottom:-4px}
+
+.frame.exam{border-color:#ffd166;background:linear-gradient(180deg,rgba(255,209,102,.16),rgba(0,0,0,.25))}
+.frame.exam p{margin:0 0 8px;font-size:13.5px;line-height:1.45;text-align:center}
+.exbar{display:grid;grid-template-columns:62px 1fr 52px;gap:8px;align-items:center;font-size:12px;margin:4px 0}
+.exbar b{text-align:right}.exbar .xpbar{width:100%}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- Guild hall backdrop -->
+  <div class="scene" aria-hidden="true">
+    <svg viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2416"/><stop offset=".55" stop-color="#6e4628"/><stop offset="1" stop-color="#2a170c"/></linearGradient>
+        <pattern id="planks" width="44" height="800" patternUnits="userSpaceOnUse"><rect width="44" height="800" fill="url(#wall)"/><rect x="42" width="2" height="800" fill="rgba(0,0,0,.28)"/><rect x="2" width="1" height="800" fill="rgba(255,220,170,.06)"/></pattern>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7cc4ff"/><stop offset=".7" stop-color="#d9f0ff"/><stop offset="1" stop-color="#fff0c4"/></linearGradient>
+        <linearGradient id="ray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6d6" stop-opacity=".45"/><stop offset="1" stop-color="#fff6d6" stop-opacity="0"/></linearGradient>
+        <radialGradient id="glow"><stop offset="0" stop-color="#ffd27a" stop-opacity=".75"/><stop offset="1" stop-color="#ffb347" stop-opacity="0"/></radialGradient>
+        <linearGradient id="banner" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2d4fc4"/><stop offset="1" stop-color="#162a7a"/></linearGradient>
+      </defs>
+      <rect width="400" height="800" fill="url(#planks)"/>
+      <rect y="0" width="400" height="38" fill="#24150b"/>
+      <rect y="36" width="400" height="6" fill="#8a5a2c"/>
+      <!-- windows -->
+      <g>
+        <path d="M30 380 V190 Q30 120 85 120 Q140 120 140 190 V380Z" fill="url(#sky)" stroke="#2a170c" stroke-width="10"/>
+        <path d="M85 120 V380 M30 250 H140" stroke="#2a170c" stroke-width="6"/>
+        <path d="M260 380 V190 Q260 120 315 120 Q370 120 370 190 V380Z" fill="url(#sky)" stroke="#2a170c" stroke-width="10"/>
+        <path d="M315 120 V380 M260 250 H370" stroke="#2a170c" stroke-width="6"/>
+        <ellipse cx="62" cy="215" rx="18" ry="7" fill="#fff" opacity=".85"/><ellipse cx="335" cy="200" rx="22" ry="8" fill="#fff" opacity=".8"/>
+        <path d="M40 380 L140 380 L230 800 L-60 800Z" fill="url(#ray)"/>
+        <path d="M260 380 L360 380 L470 800 L170 800Z" fill="url(#ray)"/>
+      </g>
+      <!-- guild banner -->
+      <g>
+        <rect x="146" y="40" width="108" height="10" rx="3" fill="#b8862b"/>
+        <path d="M156 50 H244 V300 L200 330 L156 300Z" fill="url(#banner)" stroke="#f3cb64" stroke-width="4"/>
+        <path d="M200 120 L236 134 V180 Q236 214 200 232 Q164 214 164 180 V134Z" fill="#f3cb64"/>
+        <path d="M200 132 L226 142 V180 Q226 206 200 220 Q174 206 174 180 V142Z" fill="#1d3591"/>
+        <path d="M184 206 L216 150 M216 206 L184 150" stroke="#f3cb64" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="200" cy="178" r="7" fill="#ff6f91" stroke="#fff3c8" stroke-width="2"/>
+        <text x="200" y="98" text-anchor="middle" font-family="Cinzel,serif" font-weight="900" font-size="15" fill="#f3cb64">GUILD</text>
+      </g>
+      <!-- lanterns -->
+      <circle cx="20" cy="440" r="70" fill="url(#glow)"/><circle cx="380" cy="440" r="70" fill="url(#glow)"/>
+      <g fill="#2a170c"><rect x="16" y="400" width="8" height="20"/><rect x="376" y="400" width="8" height="20"/></g>
+      <rect x="8" y="420" width="24" height="34" rx="5" fill="#ffcf6b" stroke="#2a170c" stroke-width="4"/>
+      <rect x="368" y="420" width="24" height="34" rx="5" fill="#ffcf6b" stroke="#2a170c" stroke-width="4"/>
+      <!-- shelf with bottles/books -->
+      <rect x="0" y="520" width="400" height="10" fill="#4a2c16"/>
+      <g><rect x="18" y="488" width="12" height="32" fill="#7a3cc4"/><rect x="32" y="494" width="10" height="26" fill="#2459b8"/><rect x="44" y="484" width="14" height="36" fill="#b5442a"/>
+        <circle cx="358" cy="506" r="12" fill="#5fe0c8" opacity=".85"/><rect x="354" y="486" width="8" height="10" fill="#8a5a2c"/>
+        <circle cx="380" cy="510" r="9" fill="#ff8eab" opacity=".85"/></g>
+    </svg>
+  </div>
+
+  <!-- Lilia, full art -->
+  <div class="lilia" id="liliaArt" role="button" tabindex="0" aria-label="Talk to Lilia">
+    <svg viewBox="0 0 300 360">
+      <defs>
+        <linearGradient id="hair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6a56b0"/><stop offset="1" stop-color="#3a2c68"/></linearGradient>
+        <linearGradient id="iris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b2a8a"/><stop offset=".6" stop-color="#6f5be0"/><stop offset="1" stop-color="#d0a4ff"/></linearGradient>
+        <linearGradient id="coat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#25398f"/><stop offset="1" stop-color="#121c52"/></linearGradient>
+        <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffeadf"/><stop offset="1" stop-color="#fbd6c3"/></linearGradient>
+      </defs>
+      <!-- back hair -->
+      <path d="M92 118 Q84 44 150 40 Q216 44 208 118 Q214 210 232 330 L68 330 Q86 210 92 118Z" fill="url(#hair)"/>
+      <!-- body -->
+      <path d="M150 196 Q100 200 82 240 L66 360 H234 L218 240 Q200 200 150 196Z" fill="url(#coat)"/>
+      <path d="M82 240 Q100 214 126 206 L118 360 H66Z" fill="#1a2a72" opacity=".5"/>
+      <path d="M126 204 L150 252 L174 204 Q150 214 126 204Z" fill="#fff"/>
+      <path d="M150 252 V360" stroke="#f3cb64" stroke-width="3"/>
+      <path d="M126 206 L118 360 M174 206 L182 360" stroke="#f3cb64" stroke-width="2.5"/>
+      <path d="M138 222 L150 232 L162 222 L156 244 L150 236 L144 244Z" fill="#ff6f91"/>
+      <circle cx="150" cy="230" r="4.5" fill="#f3cb64" stroke="#fff6cf" stroke-width="1.5"/>
+      <path d="M92 252 L110 246 L112 262 L94 268Z" fill="#f3cb64"/><!-- shoulder badge -->
+      <path d="M100 250 L104 258" stroke="#1d3591" stroke-width="2"/>
+      <!-- neck -->
+      <path d="M138 172 H162 V204 Q150 212 138 204Z" fill="#f6cdb9"/>
+      <!-- face -->
+      <path d="M108 122 Q108 76 150 74 Q192 76 192 122 Q192 160 150 184 Q108 160 108 122Z" fill="url(#skin)"/>
+      <!-- side locks -->
+      <path d="M106 112 Q96 170 104 236 Q114 210 116 168 Q118 134 114 112Z" fill="url(#hair)"/>
+      <path d="M194 112 Q204 170 196 236 Q186 210 184 168 Q182 134 186 112Z" fill="url(#hair)"/>
+      <!-- eyes -->
+      <g id="eyes">
+        <path d="M119 127 Q132 118 146 125 L148 122" stroke="#2a1a40" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+        <path d="M181 127 Q168 118 154 125 L152 122" stroke="#2a1a40" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+        <ellipse cx="132" cy="135" rx="10" ry="12.5" fill="url(#iris)"/>
+        <ellipse cx="168" cy="135" rx="10" ry="12.5" fill="url(#iris)"/>
+        <ellipse cx="132" cy="137" rx="4.5" ry="6" fill="#1e1450"/>
+        <ellipse cx="168" cy="137" rx="4.5" ry="6" fill="#1e1450"/>
+        <circle cx="135.5" cy="130" r="3.4" fill="#fff"/><circle cx="171.5" cy="130" r="3.4" fill="#fff"/>
+        <circle cx="128.5" cy="141" r="1.6" fill="#fff" opacity=".85"/><circle cx="164.5" cy="141" r="1.6" fill="#fff" opacity=".85"/>
+      </g>
+      <path d="M122 108 Q132 103 142 107" stroke="#3a2c68" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M158 107 Q168 103 178 108" stroke="#3a2c68" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <ellipse cx="121" cy="152" rx="7" ry="3.5" fill="#ff8fab" opacity=".45"/>
+      <ellipse cx="179" cy="152" rx="7" ry="3.5" fill="#ff8fab" opacity=".45"/>
+      <path d="M144 160 Q150 166 156 160" stroke="#b04a62" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <!-- bangs -->
+      <path d="M104 124 Q100 66 150 62 Q200 66 196 124 L188 102 L182 122 L172 92 L164 118 L154 88 L146 116 L136 92 L128 120 L118 100 L112 124Z" fill="url(#hair)"/>
+      <path d="M118 78 Q150 60 182 78" stroke="#9b8ae0" stroke-width="4" fill="none" stroke-linecap="round" opacity=".7"/>
+      <path d="M150 62 Q144 44 156 40 Q150 50 158 56" stroke="#4e3d8c" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <!-- hairpin -->
+      <g transform="translate(186 82) rotate(20)">
+        <path d="M0 0 L-16 -10 L-14 10Z M0 0 L16 -10 L14 10Z" fill="#f3cb64" stroke="#a8771f" stroke-width="1.5"/>
+        <circle r="5" fill="#ff6f91" stroke="#fff6cf" stroke-width="1.5"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- counter -->
+  <div class="counter" aria-hidden="true">
+    <svg viewBox="0 0 400 200" preserveAspectRatio="xMidYMin slice">
+      <defs><linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a5630"/><stop offset="1" stop-color="#3b2010"/></linearGradient></defs>
+      <rect y="18" width="400" height="182" fill="url(#wood)"/>
+      <rect y="0" width="400" height="22" rx="3" fill="#a86c3c"/>
+      <rect y="18" width="400" height="5" fill="#f3cb64"/>
+      <g fill="none" stroke="rgba(0,0,0,.3)" stroke-width="3"><rect x="20" y="40" width="100" height="140" rx="4"/><rect x="280" y="40" width="100" height="140" rx="4"/></g>
+      <circle cx="200" cy="96" r="30" fill="#1d3591" stroke="#f3cb64" stroke-width="5"/>
+      <path d="M186 110 L214 80 M214 110 L186 80" stroke="#f3cb64" stroke-width="4" stroke-linecap="round"/>
+      <!-- desk items -->
+      <rect x="40" y="-6" width="56" height="12" rx="2" fill="#f4e4bd" transform="rotate(-4 68 0)"/>
+      <rect x="44" y="-12" width="56" height="12" rx="2" fill="#fff3d4" transform="rotate(3 72 -6)"/>
+      <path d="M318 6 Q318 -14 332 -14 Q346 -14 346 6Z" fill="#f3cb64" stroke="#a8771f" stroke-width="2"/>
+      <circle cx="332" cy="-17" r="3" fill="#a8771f"/>
+      <rect x="312" y="5" width="40" height="5" rx="2" fill="#a8771f"/>
+    </svg>
+  </div>
+  <canvas id="fx" aria-hidden="true"></canvas>
+
+  <!-- HUD -->
+  <header class="hud">
+    <div class="plate" id="plate" role="button" tabindex="0" aria-label="Open your guild card">
+      <div class="portrait-sm" id="hudPortrait"></div>
+      <div style="min-width:0">
+        <div class="pname" id="advName">Adventurer</div>
+        <div class="rankline">LV <b id="lvText">1</b></div>
+        <div class="xpbar" title="EXP"><i id="xpBar" style="width:0%"></i></div>
+      </div>
+    </div>
+    <div class="res">
+      <div class="pill" title="Gold">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#f3cb64" stroke="#a8771f" stroke-width="2"/><circle cx="12" cy="12" r="6" fill="none" stroke="#a8771f" stroke-width="1.5"/><path d="M12 8v8" stroke="#a8771f" stroke-width="2"/></svg>
+        <span id="goldText">0</span></div>
+      <button class="pill" title="Guild Crystals" data-tab="gacha">
+        <svg viewBox="0 0 24 24"><path d="M12 2l7 7-7 13L5 9z" fill="#9be7ff" stroke="#2a7fb8" stroke-width="1.5"/><path d="M5 9h14M12 2l-3 7 3 13 3-13z" stroke="#2a7fb8" stroke-width="1" fill="none"/></svg>
+        <span id="crysText">0</span></button>
+    </div>
+  </header>
+
+  <!-- home side buttons -->
+  <div class="side" id="side">
+    <button class="orb" data-act="openBoard" data-v="quests"><span class="ring"><svg viewBox="0 0 24 24"><path d="M3 4h18v13H3z" fill="#9c6a3a" stroke="#3a2205" stroke-width="1.2"/><path d="M5.5 6.5h5v6h-5zM13 6.5h5.5v4H13z" fill="#fff5d8"/><circle cx="8" cy="6.5" r="1.1" fill="#c8302c"/><circle cx="15.7" cy="6.5" r="1.1" fill="#c8302c"/><path d="M6 17l-2 4M18 17l2 4" stroke="#fff5d8" stroke-width="1.8"/></svg></span>Quest Board<span class="badge" id="aBadge" hidden>0</span></button>
+    <button class="orb teal" data-act="library"><span class="ring"><svg viewBox="0 0 24 24"><path d="M3 5h4v15H3zM8 4h4v16H8z" fill="#fff5d8" stroke="#3a5a6a" stroke-width="1.1"/><path d="M13.5 6.2l3.6-1 3.9 14.3-3.6 1z" fill="#ffd07a" stroke="#3a5a6a" stroke-width="1.1"/><path d="M3 8h4M8 7h4M8 16h4M3 17h4" stroke="#c8302c" stroke-width="1.2"/><path d="M2 20.5h20" stroke="#3a5a6a" stroke-width="1.4"/></svg></span>Library</button>
+  </div>
+
+  <!-- dialogue -->
+  <section class="dialog" id="dialog" aria-live="polite">
+    <span class="nametag">LILIA</span>
+    <span id="lilia">Welcome back! Let me pull up your file…</span>
+    <span class="tri" aria-hidden="true">▼</span>
+  </section>
+
+  <!-- panels -->
+  <main class="panel" id="panel"></main>
+
+  <!-- nav -->
+  <nav class="nav" role="tablist" aria-label="Menu">
+    <button role="tab" data-tab="home" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z" fill="currentColor"/></svg>Guild Hall</button>
+    <button role="tab" data-tab="party" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.2" fill="currentColor"/><circle cx="16" cy="8" r="3.2" fill="currentColor"/><path d="M1.5 20c.6-4 3.3-6 6.5-6s5.9 2 6.5 6zM10 20c.4-2.6 2.2-6 6-6 3.2 0 5.9 2 6.5 6z" fill="currentColor"/></svg>Party</button>
+    <button role="tab" data-tab="adventure" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 3l9 9-2 2L2 5V3zM20 3h2v2l-9 9-2-2z" fill="currentColor"/><path d="M5 15l4 4-2 2-1-1-2 1 1-2-1-1zM19 15l-4 4 2 2 1-1 2 1-1-2 1-1z" fill="currentColor"/></svg>Adventure</button>
+    <button role="tab" data-tab="shop" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1 13H6z" fill="currentColor"/><path d="M8.5 8V6a3.5 3.5 0 017 0v2" stroke="currentColor" stroke-width="2" fill="none"/></svg>Shop</button>
+    <button role="tab" data-tab="gacha" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M12 1l3.2 6.5L22 9l-5 4.6L18.4 21 12 17.5 5.6 21 7 13.6 2 9l6.8-1.5z" fill="currentColor"/></svg>Recruit</button>
+  </nav>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true"><div class="sheet frame" id="sheet"></div></div>
+  <div class="arena" id="arena"></div>
+  <div class="splash" id="splash"><div class="rays"></div><div class="sp-in" id="spIn"></div></div>
+  <button class="tipbtn" id="tipBtn" hidden data-act="tutTip">💬 Tip</button>
+  <div class="lpop" id="lpop" hidden><div class="lp-art" id="lpArt"></div><div class="lp-box"><span class="nametag">LILIA</span><p id="lpText"></p><span class="tap">Tap to continue ▼</span></div></div>
+  <div class="coach" id="coach" hidden><span class="nametag">LILIA</span><p id="coachText"></p><button class="gbtn sm" id="coachBtn" hidden></button></div>
+  <div class="gachafx" id="gachafx"></div>
+  <div class="toast" id="toast" role="status"></div>
+  </div>
+
+<script src="pixel.js"></script>
+<script src="ai.js"></script>
+<script src="extras.js"></script>
+<script src="game.js"></script>
+<script src="battle.js"></script>
+<script src="party.js"></script>
+<script src="art.js"></script>
+<script src="profile.js"></script>
+<script src="camera.js"></script>
+<script src="rank.js"></script>
+<script src="story.js"></script>
+<script src="event.js"></script>
+<script src="gather2.js"></script>
+<script src="ads.js"></script>
+<script src="bgm.js"></script>
+<script src="notify.js"></script>
+<script src="focus.js"></script>
+<script src="journal.js"></script>
+<script src="tutorial.js"></script>
+<script>
+/* ---------- constants ---------- */
+const RANKS = {E:{xp:10,gold:5},D:{xp:20,gold:10},C:{xp:35,gold:18},B:{xp:55,gold:30},A:{xp:80,gold:45},S:{xp:120,gold:70}};   // S = story quests
+const STARS = {E:1,D:2,C:3,B:4,A:5,S:6};
+
+const GREETINGS = [
+  "Welcome back! The board's freshly posted. Pick a notice and I'll stamp it when you bring proof.",
+  "Ah, there you are! The guild master's been asking about you. Anything on the board catch your eye?",
+  "Good to see you! Remember, photo quests need proof. No proof, no pay!",
+  "Morning shift's quiet today… perfect time to clear a few quests, don't you think?",
+  "Oh! You're just in time. Some fresh requests came in."
+];
+const POKES = [
+  "Hm? Did you need something? The quest board's right over there!",
+  "Hey! No poking the receptionist. That's in the guild rules. Page four.",
+  "Between you and me, the guild master can't cook. Don't tell him I said that.",
+  "If you clear enough quests, maybe I'll put in a good word for your rank-up~",
+  "I've been sorting request forms all day. My stamp hand is SO tired.",
+  "Every quest you clear makes the guild look good. And me too, honestly!",
+  "Do you want a cup of tea? …Oh, right, you're on the other side of the screen."
+];
+const STARTERS = [
+  {title:"Wash the dishes",rank:"D",cat:"household",size:"medium",repeat:"daily",proof:"photo"},
+  {title:"Make the bed",rank:"E",cat:"household",size:"quick",repeat:"daily",proof:"photo"},
+  {title:"Drink a full bottle of water",rank:"E",cat:"selfcare",size:"quick",repeat:"daily",proof:"honour"},
+  {title:"Take the bins out",rank:"D",cat:"outside",size:"quick",repeat:"weekly",proof:"photo"},
+  {title:"Laundry: wash, dry and fold one load",rank:"C",cat:"household",size:"big",repeat:"weekly",proof:"photo"}
+];
+/* What a proof photo must show, so it can't be faked with a scene that looks the same whether or not the chore got done.
+   Shown when reporting, sent to the AI check and the Guild Inspector. Custom quests get one from Lilia's AI sorting. */
+const PROOF_SHOT = {
+  "wash the dishes": "Clean dishes on the drying rack, or freshly washed dishes next to an empty sink",
+  "make the bed": "Your made bed",
+  "take the bins out": "The bin out at the kerb or collection point",
+  "laundry: wash, dry and fold one load": "Washing hanging on a line or drying rack, a load in the dryer, or a freshly folded pile. Not clothes already put away in a wardrobe or drawer",
+  "fold and put away a pile of clothes": "The freshly folded pile, before it goes away",
+  "hang out or move a load of washing": "Washing hanging on a line or drying rack, or a load inside the dryer",
+  "change your bed sheets": "The old sheets in the wash pile or machine, or the bed mid-change",
+  "put away all the clean dishes": "The empty drying rack or dishwasher, with the dishes put away",
+  "take out the recycling": "The recycling bin out, or the full bag going in",
+  "empty every bin in the house": "The emptied bins, or the full bags taken out",
+  "clean out the fridge": "The cleared fridge shelves, or the old food you threw out",
+  "prep tomorrow's lunch": "The packed lunch",
+  "water the plants": "The plants with wet soil, or the watering can in action",
+  "wash your water bottle": "The bottle being washed or drying upside down"
+};
+const shotFor = q => q && q.proof!=="honour" ? (q.shot || PROOF_SHOT[(q.title||"").trim().toLowerCase()] || "") : "";
+const COIN = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#f3cb64" stroke="#a8771f" stroke-width="2"/><circle cx="12" cy="12" r="6" fill="none" stroke="#a8771f" stroke-width="1.5"/><path d="M12 8v8" stroke="#a8771f" stroke-width="2"/></svg>`;
+const ORB = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#7fd8ff" stroke="#2a7fb8" stroke-width="2"/><path d="M12 5l2 5h5l-4 3 1.6 5L12 15l-4.6 3L9 13 5 10h5z" fill="#fff"/></svg>`;
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = () => Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4);
+const pad = n => String(n).padStart(2,"0");
+const dayKey = (d=new Date()) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const weekKey = (d=new Date()) => { const x=new Date(d); const wd=(x.getDay()+6)%7; x.setDate(x.getDate()-wd); return dayKey(x); };
+/* slow, guild-like levelling: ranks need LV 5 / 10 / 20 / 35 / 50 / 65 (see rank.js) */
+const xpNeeded = lvl => lvl<=4 ? [60,150,330,560][lvl-1] : lvl<10 ? 550 : lvl<20 ? 605 : lvl<35 ? 880 : lvl<50 ? 1760 : 1980;
+function levelInfo(total){ let lvl=1, rest=total; while(rest >= xpNeeded(lvl)){ rest -= xpNeeded(lvl); lvl++; } return {lvl, into:rest, need:xpNeeded(lvl)}; }
+function guildRank(){ return Rank.cur(); }   // rank is earned through exams, not just levels
+function reward(rank, proof){ const r=RANKS[rank]||RANKS.E; const f = proof==="honour" ? .5 : 1; return {xp:Math.round(r.xp*f), gold:Math.round(r.gold*f*Rank.bonus())}; }
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const tilt = id => { let h=0; for(const c of String(id)) h=(h*31+c.charCodeAt(0))|0; return ((Math.abs(h)%7)-3)*0.9; };
+const stars = r => "★".repeat(STARS[r]||1);
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- state ---------- */
+function freshState(){
+  return { name:"Adventurer", xp:0, gold:0, completed:0,
+    quests: STARTERS.map(q => ({...q, id:uid()})),
+    done:{}, active:{}, bounties:{date:"", list:[]}, log:[], inspector:{}, pending:{} };
+}
+let state = freshState();
+let tab = "home";
+let ref = null, writing = false, dirty = false;
+
+let wiping = false;   // set while deleting data, so nothing re-saves before the reload
+function saveLocal(){ if(wiping) return; try{ localStorage.setItem("guild-save", JSON.stringify(state)); }catch(e){} }
+let notifSyncT = 0;
+async function save(){
+  saveLocal();
+  clearTimeout(notifSyncT); notifSyncT = setTimeout(() => { try{ Notify.sync(); }catch(e){} }, 1500);   // keep due-date alerts in step with quests
+  if(!ref) return;
+  dirty = true;
+  if(writing) return;
+  writing = true;
+  while(dirty){
+    dirty = false;
+    try{ await ref.set(JSON.parse(JSON.stringify(state))); }
+    catch(e){ if(e && e.code==="unavailable"){ await new Promise(r=>setTimeout(r,800+Math.random()*800)); try{ await ref.set(JSON.parse(JSON.stringify(state))); }catch(_){} } else { setStatus("Couldn't save to the guild records. Progress is kept on this device for now."); } }
+  }
+  writing = false;
+}
+let statusText = "Loading your guild file…";
+function setStatus(t){ statusText = t; if(tab==="settings") render(); }
+let typeTimer = null;
+function say(t){
+  const el = $("lilia"); clearInterval(typeTimer);
+  if(typeof Lilia!=="undefined") Lilia.talk(reduceMotion ? 900 : Math.min(6000, t.length*11+200));
+  if(reduceMotion){ el.textContent = t; return; }
+  let i = 0; el.textContent = "";
+  typeTimer = setInterval(() => { i += 2; el.textContent = t.slice(0,i); if(i >= t.length) clearInterval(typeTimer); }, 22);
+}
+function toast(t){ const el=$("toast"); el.textContent=t; el.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove("show"),2400); }
+
+/* ---------- availability & scheduling ---------- */
+const DAYN = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+function poolPicks(){
+  const pool = state.quests.filter(q=>q.repeat==="pool").map(q=>q.id).sort();
+  const n = Math.min(pool.length, state.poolPerDay||2);
+  let s=0; for(const c of dayKey()+"pool") s=(s*31+c.charCodeAt(0))>>>0;
+  const rnd=()=>{ s=(s*1103515245+12345)>>>0; return (s>>>8)/16777216; };
+  for(let i=pool.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+  return new Set(pool.slice(0,n));
+}
+function isAvailable(q){
+  const d = state.done[q.id], today = dayKey();
+  switch(q.repeat){
+    case "daily": return !d || d.day !== today;
+    case "weekly": return hasDueDay(q) ? (!d || d.cycle !== weeklyDue(q)) : (!d || d.week !== weekKey());
+    case "days": return (q.days||[]).includes(new Date().getDay()) && (!d || d.day !== today);
+    case "pool": return poolPicks().has(q.id) && (!d || d.day !== today);
+    default: return !d;   // once, due
+  }
+}
+const isOverdue = q => q.repeat==="due" && q.due && q.due < dayKey();
+/** Weekly quests can have a due weekday (e.g. bin day = Tuesday). Each cycle runs from the day after one due day to the next. */
+const hasDueDay = q => q.repeat==="weekly" && q.dueDay!=null && q.dueDay!=="";
+function weeklyDue(q, from=new Date()){ const x=new Date(from); x.setHours(12,0,0,0); x.setDate(x.getDate()+((+q.dueDay - x.getDay() + 7) % 7)); return dayKey(x); }
+/** The date a quest has to be done by, if it has one (and isn't done yet for this cycle) */
+function deadlineOf(q){
+  if(q.repeat==="due" && q.due && !state.done[q.id]) return q.due;
+  if(hasDueDay(q) && isAvailable(q)) return weeklyDue(q);
+  return null;
+}
+const dueToday = q => deadlineOf(q)===dayKey();
+function fmtDate(k){ const [y,m,d]=k.split("-").map(Number); const dt=new Date(y,m-1,d); return `${DAYN[dt.getDay()]} ${d} ${dt.toLocaleString("en-AU",{month:"short"})}`; }
+function repeatTxt(q){
+  if(q.bounty) return "Today only";
+  switch(q.repeat){
+    case "daily": return "Daily";
+    case "weekly": return hasDueDay(q) ? (weeklyDue(q)===dayKey() ? "Weekly · due today!" : `Weekly · due ${DAYN[+q.dueDay]}`) : "Weekly";
+    case "days": return (q.days||[]).slice().sort((a,b)=>((a+6)%7)-((b+6)%7)).map(d=>DAYN[d]).join(", ") || "No days set";
+    case "pool": return "Random pool";
+    case "due": return q.due ? (isOverdue(q) ? `Overdue (${fmtDate(q.due)})` : `Due ${fmtDate(q.due)}`) : "One-time";
+    default: return "One-time";
+  }
+}
+function todaysBounties(){ return state.bounties && state.bounties.date===dayKey() ? state.bounties.list : []; }
+function findQuest(id){ return state.quests.find(q=>q.id===id) || todaysBounties().find(b=>b.id===id); }
+function activeList(){ return [...state.quests, ...todaysBounties()].filter(q => state.active[q.id] && (q.bounty ? !q.done : isAvailable(q))); }
+
+/* ---------- rendering ---------- */
+let hudLookKey = "";
+function headSVG(){
+  const h = state.hero;
+  if(!h || !h.created) return `<svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4.5" fill="#c9d2ff"/><path d="M3 22c1-5 5-7 9-7s8 2 9 7z" fill="#c9d2ff"/></svg>`;
+  return pic(heroPortrait(), "head");
+}
+function renderHUD(){
+  const li = levelInfo(state.xp);
+  $("advName").textContent = state.name || "Adventurer";
+  $("lvText").textContent = li.lvl;
+  $("xpBar").style.width = Math.min(100, li.into/li.need*100) + "%";
+  ensureParty(); $("crysText").textContent = (state.crystals||0).toLocaleString();
+  $("goldText").textContent = state.gold.toLocaleString();
+  const key = JSON.stringify(state.hero && state.hero.created ? [state.hero.look, state.hero.weapon] : 0);
+  if(key !== hudLookKey){ hudLookKey = key; $("hudPortrait").innerHTML = headSVG(); }
+  const n = activeList().length, open = state.quests.filter(q=>!state.active[q.id]&&isAvailable(q)).length;
+  $("aBadge").hidden = !(n||open); $("aBadge").textContent = n ? n : open;
+}
+const qReward = q => q.tut ? {xp:10, gold:100} : reward(qRank(q), q.proof);
+const cryFor = q => q.tut ? 220 : Math.round(({E:5,D:8,C:12,B:16,A:20,S:30}[qRank(q)]||5) * (q.proof==="honour"?.5:1) * Rank.bonus());
+function notice(q){
+  const r = qReward(q), od = isOverdue(q);
+  const head = q.story ? "📜 STORY QUEST" : q.bounty ? "★ BOUNTY" : od ? "⚠ OVERDUE" : q.repeat==="due" ? "⏰ DUE " + fmtDate(q.due).toUpperCase() : q.repeat==="pool" ? "✦ RANDOM PICK" : "REQUEST";
+  return `<button class="notice ${q.bounty?'bounty':''} ${q.story?'storyq':''} ${od?'overdue':''}" style="--r:${tilt(q.id)}deg" data-act="open" data-id="${q.id}">
+    <span class="stamp c-${qRank(q)}">${qRank(q)}</span>
+    <span class="nh">${head}${q.cat&&CATS[q.cat]?" · "+CATS[q.cat].i:""}</span>
+    <span class="ns">${stars(qRank(q))}</span>
+    <span class="nt">${esc(q.title)}</span>
+    <span class="nr"><span>${r.xp} EXP · ${r.gold} G · ${cryFor(q)}💎</span><span>${q.proof==="photo"?"📸":"🤝"}</span></span>
+  </button>`;
+}
+let boardTab = "quests";
+function renderBoard(){
+  const tabs = [["quests","Quests"],["supplies","Hunt & Gather"],["mine","📌 Post"]];
+  let body = "";
+  if(boardTab==="supplies") body = renderSupplies();
+  else if(boardTab==="mine") body = renderPostings();
+  else {
+    const active = activeList();
+    const open = state.quests.filter(q => !state.active[q.id] && isAvailable(q)).sort((a,b)=>(!!b.story-!!a.story) || (isOverdue(b)-isOverdue(a)) || (dueToday(b)-dueToday(a)));
+    const bounties = todaysBounties().filter(b => !state.active[b.id] && !b.done);
+    const asked = state.bounties && state.bounties.date===dayKey();
+    const rows = active.map(q => { const r=qReward(q); return `
+      <button class="row" data-act="open" data-id="${q.id}"><span class="gem r-${qRank(q)}">${qRank(q)}</span>
+        <span>${esc(q.title)}<small>${pendingFor(q.id)?"⏳ Waiting for your Guild Inspector":q.proof==="photo"?"📸 Bring photo proof":"🤝 Trust quest: report it yourself"} · ${repeatTxt(q)}</small></span>
+        <span class="rt">${r.xp} EXP<small>${r.gold} G · ${cryFor(q)} 💎</small></span></button>`; }).join("");
+    body = `${Tut.boardCard()}${Rank.boardCard()}${LostBoot.boardCard()}
+      <section class="frame"><span class="ribbon">QUEST LOG</span>
+        ${rows || `<div class="none">No quests accepted yet. Take a notice from the board below!</div>`}</section>
+      <section class="frame" id="boardFrame"><span class="ribbon">QUEST BOARD</span>
+        <div class="cork"><div class="notices">
+          ${open.map(notice).join("")}
+          ${bounties.map(notice).join("")}
+          ${!open.length && !bounties.length ? `<div class="board-empty">Board cleared! Repeating notices go back up when they're due.</div>` : ""}
+        </div></div>
+        <div class="btns" style="margin-top:14px">
+          ${asked ? "" : `<button class="gbtn" data-act="bounties">★ Ask Lilia for today's bounties</button>`}
+        </div>
+      </section>`;
+  }
+  return `<div class="boardhead"><div class="subtabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" class="${boardTab===k?'on':''}" aria-selected="${boardTab===k}" data-act="boardTab" data-v="${k}">${l}</button>`).join("")}</div>
+    <button class="xbtn" data-act="closeBoard" aria-label="Back to the guild hall">✕</button></div>${body}`;
+}
+function renderLibrary(){
+  const mins = d => Focus.minutes(d), today=dayKey();
+  let week=0; for(let i=0;i<7;i++){ const t=new Date(); t.setDate(t.getDate()-i); week+=mins(`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`); }
+  const cleared=(state.log||[]).filter(l=>l.date===today).length, due=(state.quests||[]).filter(q=>q.repeat==="due"&&q.due>=today).length;
+  const card = (act,v,i,n,d,extra) => `<button class="libcard" data-act="${act}" ${v?`data-v="${v}"`:""}><span class="li-i">${i}</span><span><b>${n}</b><small>${d}</small>${extra?`<em>${extra}</em>`:""}</span><span class="li-go">›</span></button>`;
+  return `<div class="boardhead"><div class="libtitle">📚 Library</div><button class="xbtn" data-act="closeBoard" aria-label="Back to the guild hall">✕</button></div>
+    <section class="frame"><span class="ribbon">STUDY &amp; TOOLS</span>
+      <div class="libcards">
+        ${card("focus","","⏱️","Focus timer","Pomodoro or countdown, with focus music", Focus.running?"⏳ A timer is running":"")}
+        ${card("journal","diary","📖","Journal","Your diary, study notes and quest log", D_COUNT())}
+        ${card("journal","cal","📅","Calendar","Due dates and what you did each day", due?`📌 ${due} quest${due>1?"s":""} with a due date`:"")}
+      </div></section>
+    <section class="frame"><span class="ribbon">TODAY</span>
+      <div class="tiles"><div><b>${cleared}</b><span>Quests today</span></div><div><b>${mins(today)}</b><span>Focus min</span></div><div><b>${week}</b><span>Focus this week</span></div></div></section>`;
+}
+const D_COUNT = () => { const n=(state.diary||[]).length; return n?`${n} entr${n>1?"ies":"y"} written`:""; };
+function renderPostings(){
+  const groups = [["Repeating",q=>["daily","weekly","days"].includes(q.repeat)],["Random pool",q=>q.repeat==="pool"],["One-time & due dates",q=>!q.repeat||q.repeat==="once"||q.repeat==="due"]];
+  const row = q => `<div class="row"><span class="gem r-${qRank(q)}">${qRank(q)}</span>
+      <span>${esc(q.title)}<small><span class="stars">${stars(qRank(q))}</span> · ${q.cat&&CATS[q.cat]?CATS[q.cat].i+" "+SIZES[q.size].n:"⚠ tap Edit to set its type"} · ${esc(repeatTxt(q))} · ${q.proof==="photo"?"Photo":"Trust"}</small></span>
+      <button class="mini edit" data-act="postEdit" data-id="${q.id}">Edit</button></div>`;
+  const poolN = state.quests.filter(q=>q.repeat==="pool").length;
+  return `<section class="frame"><span class="ribbon">POST A QUEST</span>
+    <p class="note" style="margin:0 0 8px;text-align:center">Turn any real-life task into a quest. Lilia will rank it for you.</p>
+    <button class="gbtn" data-act="postNew" style="margin-bottom:4px">📌 Post a new quest</button></section>
+    <section class="frame"><span class="ribbon">MY POSTINGS</span>
+    ${groups.map(([t,f])=>{ const qs=state.quests.filter(q=>!q.tut && !q.story).filter(f); return qs.length?`<p class="grp">${t}</p>${qs.map(row).join("")}`:""; }).join("") || `<div class="none">No quests posted yet.</div>`}
+    ${poolN?`<div class="poolset"><span>Random pool: Lilia posts</span>
+      <button class="mini" data-act="poolN" data-v="-1">−</button><b>${Math.min(poolN,state.poolPerDay||2)}</b><button class="mini" data-act="poolN" data-v="1">+</button><span>of ${poolN} each day</span></div>`:""}
+    <p class="note" style="margin:10px 0 0">Rewards: E 10 EXP/5💎 · D 20/8💎 · C 35/12💎 · B 55/16💎 · A 80/20💎. Trust quests pay half.</p></section>`;
+}
+
+/* ---------- post-a-quest form ---------- */
+let postDraft = null;
+/* Posting a quest: write it -> Lilia (AI) picks the type and size -> confirm or change it.
+   Without an AI key (or when editing an existing quest) it's one form where you pick everything yourself. */
+function openPostForm(id){
+  const q = id ? state.quests.find(x=>x.id===id) : null;
+  postDraft = q ? {id:q.id, title:q.title, cat:q.cat||"", size:q.size||"", proof:q.proof, repeat:q.repeat||"once", days:[...(q.days||[])], due:q.due||"", dueDay:q.dueDay!=null?+q.dueDay:null, ai:q.ai||null, stage:"full"}
+                : {id:null, title:"", cat:"", size:"", proof:"photo", repeat:"once", days:[], due:"", dueDay:null, ai:null, stage: AI.ready() ? "write" : "full"};
+  drawPostForm();
+}
+function pfLilia(){ return `<div class="pf-lilia">${$("liliaArt") ? $("liliaArt").innerHTML : ""}</div>`; }
+function drawPostForm(){
+  const d = postDraft, st = d.stage;
+  const S = [["once","Post now","One-time"],["due","Due by","Set a deadline"],["daily","Daily","Every day"],["weekly","Weekly","Once a week"],["days","Set days","Pick weekdays"],["pool","Random pool","Lilia picks"]];
+  const order = [1,2,3,4,5,6,0];
+  const pickers = `<div class="opt"><span>TYPE (what makes it hard?)</span><div class="chips">${CAT_KEYS.map(k=>`<button type="button" class="chip ${d.cat===k?'on':''}" data-act="pfCat" data-v="${k}">${CATS[k].i} ${CATS[k].n}</button>`).join("")}</div></div>
+      <div class="opt"><span>SIZE</span><div class="chips">${Object.entries(SIZES).map(([k,z])=>`<button type="button" class="chip ${d.size===k?'on':''}" data-act="pfSize" data-v="${k}">${z.n} <small>${z.d}</small></button>`).join("")}</div></div>`;
+  const aiNote = d.ai && (d.ai.cat!==d.cat || d.ai.size!==d.size)
+      ? `<p class="pf-diff">✏️ Lilia suggested <b>${CATS[d.ai.cat].i} ${CATS[d.ai.cat].n} · ${SIZES[d.ai.size].n}</b>. You've changed it.</p>` : "";
+  const details = `<label for="pfTitle">QUEST<input type="text" id="pfTitle" maxlength="80" placeholder="e.g. Vacuum the lounge room" value="${esc(d.title)}" required></label>
+      <div class="opt"><span>WHEN?</span><div class="cards three">${S.map(([k,l,sub])=>`<button type="button" class="card ${d.repeat===k?'on':''}" data-act="pfSched" data-v="${k}"><b>${l}</b>${sub}</button>`).join("")}</div></div>
+      ${d.repeat==="due"?`<label for="pfDue">DUE DATE<input type="date" id="pfDue" min="${dayKey()}" value="${esc(d.due||dayKey())}"></label>`:""}
+      ${d.repeat==="weekly"?`<div class="opt"><span>DUE ON A SET DAY? <small style="font-weight:400;text-transform:none">e.g. bin day</small></span><div class="chips"><button type="button" class="chip ${d.dueDay==null?'on':''}" data-act="pfDueDay" data-v="">Any day</button>${order.map(i=>`<button type="button" class="chip ${d.dueDay===i?'on':''}" data-act="pfDueDay" data-v="${i}">${DAYN[i]}</button>`).join("")}</div>
+        <small class="note" style="display:block;margin-top:4px">${d.dueDay==null?"Do it any time during the week (Mon to Sun).":`It stays on the board all week and is due every ${DAYN[d.dueDay]}.`}</small></div>`:""}
+      ${d.repeat==="days"?`<div class="opt"><span>WHICH DAYS?</span><div class="chips">${order.map(i=>`<button type="button" class="chip ${d.days.includes(i)?'on':''}" data-act="pfDay" data-v="${i}">${DAYN[i]}</button>`).join("")}</div></div>`:""}
+      ${d.repeat==="pool"?`<p class="note" style="margin:0">Pool quests don't show up every day. Each morning Lilia picks ${state.poolPerDay||2} at random from your pool (change how many under My Postings).</p>`:""}
+`;
+  const privateQ = d.ai && d.ai.proof==="honour";
+  if(privateQ) d.proof = "honour";
+  const proofPick = `<div class="opt"><span>PROOF</span>${privateQ
+      ? `<div class="pf-lock">🤝 <b>Trust quest</b> · Lilia says this one can't be photographed, so you report it yourself. (Trust quests give half rewards.)</div>`
+      : `<div class="chips"><button type="button" class="chip ${d.proof==="photo"?"on":""}" data-act="pfProof" data-v="photo">📸 Photo · full rewards</button><button type="button" class="chip ${d.proof==="honour"?"on":""}" data-act="pfProof" data-v="honour">🤝 Trust · half rewards</button></div>`}</div>`;
+  let body;
+  if(st==="write"){
+    body = `${details}
+      <p class="note" style="margin:0;text-align:center">Hand it to Lilia at the counter. She'll work out the quest's type, size and what proof it needs.</p>
+      <button class="gbtn" type="submit" id="pfNext">✨ Submit to Lilia</button>
+      <button type="button" class="gbtn plain" data-act="close">Cancel</button>`;
+  } else if(st==="dupe"){
+    const o = state.quests.find(q=>q.id===d.dupe);
+    body = `<div class="pf-check">${pfLilia()}<div class="pf-bubble"><span class="nametag">LILIA</span>
+        <p>Hmm, "<b>${esc(d.title)}</b>" looks a lot like a quest you already have:</p>
+        <div class="pf-pick"><span>📜 ${esc(o?o.title:"")}</span><span>🗓️ ${o?esc(repeatTxt(o)):""}</span></div>
+        <p>What would you like to do?</p></div></div>
+      <button type="button" class="gbtn" data-act="pfDupe" data-v="replace">🔁 Replace the old one</button>
+      <button type="button" class="gbtn plain" data-act="pfDupe" data-v="both">📌 Keep both</button>
+      <button type="button" class="gbtn plain sm" data-act="close">✖ Never mind, cancel</button>`;
+  } else if(st==="confirm"){
+    body = `<div class="pf-check">${pfLilia()}<div class="pf-bubble"><span class="nametag">LILIA</span>
+        <p>"<b>${esc(d.title)}</b>" sounds like a</p>
+        <div class="pf-pick"><span>${CATS[d.cat].i} ${CATS[d.cat].n}</span><span>⏱️ ${SIZES[d.size].n} <small>(${SIZES[d.size].d})</small></span>
+          <span>${d.proof==="honour"?"🤝 Trust quest <small>(no photo, half rewards)</small>":"📸 Photo proof"}</span></div>
+        ${d.proof!=="honour"&&d.shot?`<p class="pf-why">📸 Photo should show: ${esc(d.shot)}</p>`:""}
+        ${d.reason?`<p class="pf-why">${esc(d.reason)}</p>`:""}
+        <p>Does that look right?</p>${d.replace?`<p class="pf-why">🔁 This will replace "${esc((state.quests.find(q=>q.id===d.replace)||{}).title||"")}".</p>`:""}</div></div>
+      <button class="gbtn" type="submit">✔ Looks right!</button>
+      <button type="button" class="gbtn plain" data-act="pfStage" data-v="adjust">✏️ Change it</button>
+      <button type="button" class="gbtn plain sm" data-act="pfStage" data-v="write">← Back to the quest details</button>`;
+  } else if(st==="adjust"){
+    body = `<p class="note" style="margin:0;text-align:center">"<b>${esc(d.title)}</b>"</p>${pickers}${proofPick}${aiNote}
+      <button class="gbtn" type="submit">✔ Done, hand it to Lilia</button>
+      <button type="button" class="gbtn plain sm" data-act="pfStage" data-v="confirm">← Back to Lilia's pick</button>`;
+  } else {
+    body = `${details}
+      ${AI.ready()?`<button type="button" class="gbtn plain sm" data-act="pfSort" id="pfSortBtn">✨ Ask Lilia to sort it</button>`:""}
+      ${pickers}${proofPick}${aiNote}
+      <button class="gbtn" type="submit">${d.id?"Save changes":"📌 Pin it to the board"}</button>
+      ${d.id?`<button type="button" class="gbtn plain danger" data-act="postDelete" data-id="${d.id}">Remove this quest</button>`:""}
+      <button type="button" class="gbtn plain" data-act="close">Cancel</button>`;
+  }
+  openModal(`<span class="ribbon">${d.id?"EDIT QUEST":"POST A QUEST"}</span><form id="postForm" class="postform">${body}</form>`);
+  const f=$("postForm");
+  f.addEventListener("input", syncPost);
+  f.addEventListener("submit", e => { e.preventDefault(); if(postDraft.stage==="write") pfAskLilia(); else savePost(); });
+}
+const normTitle = t => String(t).toLowerCase().replace(/[^a-z0-9 ]/g," ").split(/\s+/).filter(w=>w && !["a","an","the","my","do","take","have","go","some","to"].includes(w)).join(" ");
+function userQuests(except){ return state.quests.filter(q=>!q.tut && !q.bounty && !q.story && q.id!==except); }
+function localDupe(title, except){ const n=normTitle(title); return n ? (userQuests(except).find(q=>normTitle(q.title)===n)||null) : null; }
+async function pfAskLilia(btn){
+  syncPost(); const d=postDraft;
+  if(!d.title.trim()){ toast("Write the quest name first."); return; }
+  if(d.repeat==="days" && !d.days.length){ toast("Pick at least one day."); return; }
+  const b = btn || $("pfNext"); if(b){ b.disabled=true; b.textContent="Lilia is thinking…"; }
+  try{
+    const r = await aiSortQuest(d.title, userQuests(d.id));
+    d.cat=r.cat; d.size=r.size; d.reason=r.reason||""; d.proof=r.proof; d.shot=r.shot||""; d.ai={cat:r.cat, size:r.size, proof:r.proof};
+    const dup = (r.dupeOf && state.quests.find(q=>q.id===r.dupeOf)) || localDupe(d.title, d.id);
+    d.dupe = dup && !d.id ? dup.id : null; d.replace = null;
+    if(d.stage==="write") d.stage = d.dupe ? "dupe" : "confirm";
+    drawPostForm();
+  }catch(err){
+    toast(err.message||"Lilia couldn't sort that one. Pick a type and size yourself.");
+    if(d.stage==="write") d.stage="full"; drawPostForm();
+  }
+}
+function syncPost(){
+  if(!postDraft) return;
+  const t=$("pfTitle"); if(t) postDraft.title=t.value;
+  const du=$("pfDue"); if(du) postDraft.due=du.value;
+}
+function savePost(){
+  syncPost(); const d=postDraft; if(!d) return;
+  const title=d.title.trim(); if(!title){ toast("Give the quest a name first."); return; }
+  if(d.repeat==="days" && !d.days.length){ toast("Pick at least one day."); return; }
+  if(!d.cat || !d.size){ toast("Pick a type and a size so Lilia can rank it."); return; }
+  if(!d.id && !d.ai && !d.dupeChecked){ d.dupeChecked=true; const dup=localDupe(title); if(dup){ d.dupe=dup.id; d.stage="dupe"; drawPostForm(); return; } }
+  if(d.repeat==="due" && !d.due) d.due=dayKey();
+  if(d.repeat==="due" || (d.repeat==="weekly" && d.dueDay!=null)) Notify.ensure("due");
+  if(d.ai && d.ai.proof==="honour") d.proof="honour";
+  if(d.replace){ state.quests = state.quests.filter(x=>x.id!==d.replace); delete state.active[d.replace]; if(state.done) delete state.done[d.replace]; if(state.pending) delete state.pending[d.replace]; }
+  const data={title, cat:d.cat, size:d.size, rank:rankFor(d.cat,d.size)||"D", proof:d.proof, repeat:d.repeat, days:d.repeat==="days"?d.days:undefined, due:d.repeat==="due"?d.due:undefined, dueDay:d.repeat==="weekly"&&d.dueDay!=null?d.dueDay:undefined,
+              ai: d.ai ? {...d.ai} : undefined, shot: d.shot || undefined};
+  if(d.id){ const q=state.quests.find(x=>x.id===d.id); if(q){ Object.assign(q,data); if(!q.days) delete q.days; if(!q.due) delete q.due; if(q.dueDay==null) delete q.dueDay; if(!q.ai) delete q.ai; if(!q.shot) delete q.shot; } toast("Quest updated!"); }
+  else { const q={id:uid(), ...data}; if(!q.days) delete q.days; if(!q.due) delete q.due; if(!q.ai) delete q.ai; state.quests.push(q);
+    const t=`"${title}"`, up=isAvailable(q);
+    const filed = q.repeat==="pool" ? `Quest accepted! I've filed ${t} in the random pool. Some mornings I'll draw it for the board~`
+      : q.repeat==="days" ? `Quest accepted! I've filed ${t} away. I'll pin it up every ${q.days.slice().sort((a,b)=>((a+6)%7)-((b+6)%7)).map(i=>DAYN[i]).join(", ")}.`
+      : `Quest accepted! I've filed ${t} away until it's due again.`;
+    const posted = q.repeat==="daily" ? `Quest accepted! ${t} is on the board, and I'll pin up a fresh one every day.`
+      : q.repeat==="weekly" ? `Quest accepted! ${t} is on the board. Clear it once each week!`
+      : q.repeat==="due" ? `Quest accepted! ${t} is on the board. Due by ${fmtDate(q.due)}.`
+      : q.repeat==="pool" ? `Quest accepted! I've put ${t} in the random pool, and I drew it for today's board!`
+      : `Quest accepted! ${t} is pinned to the board. Good luck out there~`;
+    toast(up ? "📌 Quest posted!" : "🗂️ Quest filed away!"); say(up ? posted : filed); }
+  postDraft=null; save(); closeModal(); render();
+}
+
+/* ---------- guild card ---------- */
+function openCard(showRecords){
+  const li=levelInfo(state.xp), h=state.hero, rank=guildRank(li.lvl), hs=h.created?heroStats():null;
+  const verified=state.log.filter(l=>l.v).length, hunts=Object.values(h.cleared||{}).reduce((a,b)=>a+b,0);
+  if(showRecords){
+    const rows = state.log.slice(0,60).map(l => `<div class="row"><span style="color:${l.v?'#7ff0b0':'#aeb8e8'};font-size:18px">${l.v?"✔":"✦"}</span>
+      <span>${esc(l.title)}<small>${esc(l.date)} · ${({ai:"Verified by Lilia (AI)",inspector:"Approved by your Guild Inspector",honour:"Trust report",tutorial:"Tutorial"})[l.m||(l.v?"ai":"honour")]}</small></span>
+      <span class="rt">+${l.xp} EXP<small>+${l.gold} G</small></span></div>`).join("");
+    openModal(`<span class="ribbon">QUEST RECORDS</span>${rows || `<div class="none">No quests cleared yet. Your first stamp is waiting!</div>`}
+      <div class="btns"><button class="gbtn plain" data-act="close">Close</button></div>`);
+    return;
+  }
+  openModal(`<span class="ribbon">GUILD CARD</span>
+    <div class="gcard">
+      <div class="gc-art">${h.created?avatar(h.look, hs.wtype):headSVG()}</div>
+      <div class="gc-info">
+        <div class="gc-name">${esc(state.name)}</div>
+        ${hs?`<span class="clspill">${hs.cls}</span>`:`<span class="sub">No hero registered yet</span>`}
+        <div class="gc-rank"><div class="crest"><small>RANK</small>${rank}</div>
+          <div><div>LV <b>${li.lvl}</b></div><div class="xpbar" style="width:100%;max-width:110px"><i style="width:${li.into/li.need*100}%"></i></div><small class="sub">${li.into}/${li.need} EXP</small></div></div>
+      </div>
+    </div>
+    <div class="tiles">
+      <div><b>${state.completed}</b><span>Quests</span></div><div><b>${verified}</b><span>Verified</span></div><div><b>${hunts}</b><span>Hunts</span></div>
+    </div>
+    ${hs?`<div class="gc-stats">
+      <span>HP <b>${hs.maxHp}</b></span><span>ATK <b>${hs.atk}</b></span><span>DEF <b>${hs.def}</b></span>
+      <span>STR <b>${h.stats.str}</b></span><span>MAG <b>${h.stats.mag}</b></span><span>VIT <b>${h.stats.vit}</b></span><span>AGI <b>${h.stats.agi}</b></span><span>G <b>${state.gold}</b></span>
+    </div><p class="note" style="margin:0;text-align:center">Talent: ${TALENTS[h.talent].n} · Skill: ${hs.skill.n}</p>`:""}
+    <div class="btns">
+      <button class="gbtn" data-act="records">📜 Quest records</button>
+      <button class="gbtn plain" data-act="close">Close</button>
+    </div>`);
+}
+
+/* ---------- guild card screen (hero stats, gear, records, settings) ---------- */
+function renderCardScreen(){
+  ensureHero(); ensureParty();
+  if(!H().created || draft) return renderCreator();
+  const li=levelInfo(state.xp), h=H(), rank=guildRank(li.lvl), hs=heroStats();
+  const verified=state.log.filter(l=>l.v).length, hunts=Object.values(h.cleared||{}).reduce((a,b)=>a+b,0);
+  const heroParts = renderHero().replace(/<section class="frame"><span class="ribbon">HERO<\/span>[\s\S]*?<\/section>/, "");
+  return `<section class="frame"><span class="ribbon">GUILD CARD</span>
+    <div class="gcard">
+      <div class="gc-art">${avatar(h.look, hs.wtype)}</div>
+      <div class="gc-info">
+        <div class="gc-name">${esc(state.name)}</div>
+        <span class="clspill">${CLASS_ICON[hs.cls]||""} ${hs.cls}${hs.el?" "+EL_ICON[hs.el]:""}</span>
+        <div class="gc-rank"><div class="crest"><small>RANK</small>${rank}</div>
+          <div><div>LV <b>${li.lvl}</b></div><div class="xpbar" style="width:100%;max-width:110px"><i style="width:${li.into/li.need*100}%"></i></div><small class="sub">${li.into}/${li.need} EXP</small></div></div>
+      </div>
+    </div>
+    <div class="tiles" style="margin-top:10px"><div><b>${state.completed}</b><span>Quests</span></div><div><b>${verified}</b><span>Verified</span></div><div><b>${hunts}</b><span>Hunts</span></div></div>
+    <div class="gc-stats" style="margin-top:10px"><span>HP <b>${hs.maxHp}</b></span><span>ATK <b>${hs.atk}</b></span><span>DEF <b>${hs.def}</b></span><span>G <b>${state.gold}</b></span></div>
+    <p class="note" style="margin:8px 0 0;text-align:center">Talent: ${TALENTS[h.talent].n} · Skill: ${hs.skill.n}</p>${strikeLine()}
+    <div class="cardbtns">
+      <button class="gbtn" data-act="records">📜 Records</button>
+      <button class="gbtn blue" data-act="g-edit">🎨 Edit hero</button>
+      <button class="gbtn plain" data-act="settingsOpen">⚙️ Settings</button>
+    </div></section>${heroParts}`;
+}
+
+/* ---------- tutorial quest report: teaches the camera + checker loop ---------- */
+function openTutReport(q){
+  const aiOn = AI.ready(), insOn = inspectorReady();
+  if(!aiOn && !insOn){
+    openModal(`<span class="ribbon">REPORT</span><h3 class="t">${esc(q.title)}</h3>
+      <div class="verdict wait">Not done yet! This quest is to set up a quest checker, so Lilia has a way to check your proof photos.</div>
+      <div class="btns"><button class="gbtn" data-act="tutAI">🤖 Choose an AI</button><button class="gbtn blue" data-act="settingsOpen" data-v="secIns">🧐 Set up a Guild Inspector</button><button class="gbtn plain" data-act="close">Back</button></div>`);
+    return;
+  }
+  if(!aiOn){
+    // Guild Inspector only: nothing to photograph, just report it
+    openModal(`<span class="ribbon">REPORT</span><h3 class="t">${esc(q.title)}</h3>
+      <div class="verdict ok">✔ Guild Inspector ${esc(state.inspector.name||"")} registered!</div>
+      <p class="note" style="margin:0;text-align:center">Normal photo quests get sent to your Inspector by email. This one just needs reporting.</p>
+      <div class="btns"><button class="gbtn" id="tutHand">✅ Report completion</button><button class="gbtn plain" data-act="close">Back</button></div>`);
+    $("tutHand").onclick = () => { closeModal(); grant(q,true,"tutorial"); };
+    return;
+  }
+  openModal(`<span class="ribbon">REPORT</span><h3 class="t">${esc(q.title)}</h3>
+    <p class="note" style="margin:0;text-align:center">Let's test Lilia's AI! Snap a quick photo of your hand giving a <b>👍 thumbs up</b>. This is how photo quests get reported: with the in-app camera.</p>
+    <button class="filebtn" id="camBtn" type="button">📸 Open camera</button>
+    <img class="preview" id="prev" alt="Your thumbs-up photo">
+    <div id="verdict"></div>
+    <div class="btns">
+      <button class="gbtn" id="tutHand" disabled>🤖 Hand it to Lilia (AI check)</button>
+      <button class="gbtn plain" data-act="close">Back</button>
+    </div>`);
+  let file=null;
+  $("camBtn").onclick = async () => {
+    const shot = await proofShot("For this one: just your hand doing a thumbs up, no face!");
+    if(!shot || shot==="old" || !$("prev")) return;
+    file = shot; const p=$("prev"); p.src=URL.createObjectURL(file); p.style.display="block";
+    $("camBtn").textContent="📸 Retake photo"; $("tutHand").disabled=false;
+  };
+  $("tutHand").onclick = async () => {
+    if(!file) return;
+    const v=$("verdict"), btn=$("tutHand"); btn.disabled=true;
+    v.className="verdict wait"; v.textContent="Lilia is checking your photo… (this tests your AI key)";
+    try{
+      const res = await AI.vision(`You are Lilia, the cheerful receptionist of an anime fantasy adventurers' guild. A new adventurer is testing the guild's photo checking with their first photo.
+Approve if a human hand giving a thumbs up is visible. Be generous about angle and lighting.
+Reply with JSON only: {"approved": true or false, "comment": "1-2 short, warm sentences in character as Lilia. If approved, welcome them to the guild. If not, say you need to see a thumbs up."}`, await shrink(file));
+      const ok = !!(res && res.approved===true);
+      const comment = (res && typeof res.comment==="string" && res.comment) || (ok?"Welcome to the guild!":"I need to see a thumbs up!");
+      v.className = "verdict "+(ok?"ok":"no"); v.textContent = (ok?"✔ APPROVED! Your AI works. ":"✖ ")+comment;
+      if(ok){ say(comment); setTimeout(()=>{ closeModal(); grant(q,true,"ai"); }, 1800); } else btn.disabled=false;
+    }catch(err){
+      btn.disabled=false; v.className="verdict no";
+      v.textContent = (err.message||"Something went wrong.")+" Fix your key in Settings → Lilia's AI brain, then try again.";
+    }
+  };
+}
+
+/* ---------- privacy strikes ----------
+   Face in a proof photo = a strike. 3+ strikes: face photos are rejected. 5+ strikes: rewards -20%.
+   Every 7 different days of clearing quests without a face photo removes 2 strikes (gradual decay). */
+const STRIKE_REJECT = 3, STRIKE_PENALTY = 5, CLEAN_DAYS = 7, STRIKE_DECAY = 2;
+function privacy(){ return state.privacy || (state.privacy = {strikes:0, clean:[]}); }
+function addStrike(){ const p=privacy(); p.strikes++; p.clean=[]; save(); return p.strikes; }
+const strikePenalty = () => privacy().strikes >= STRIKE_PENALTY ? .8 : 1;
+function noteCleanDay(){
+  const p=privacy(); if(!p.strikes) return;
+  const d=dayKey(); if(!p.clean.includes(d)) p.clean.push(d);
+  if(p.clean.length >= CLEAN_DAYS){ const hadPen = p.strikes>=STRIKE_PENALTY; p.strikes=Math.max(0, p.strikes-STRIKE_DECAY); p.clean=[];
+    const left=p.strikes, back = hadPen && left<STRIKE_PENALTY;
+    setTimeout(()=>{ toast(left ? `🧼 −${STRIKE_DECAY} privacy strikes (${left} left)` : "🧼 Privacy strikes cleared!");
+      say(`A whole week of face-free proof! ${left ? `I've taken ${STRIKE_DECAY} strikes off, you're down to ${left}.` : "Your privacy strikes are all cleared~"}${back ? " And your full rewards are back!" : ""}`); }, 4500); }
+}
+function strikeLine(){
+  const p=privacy(); if(!p.strikes) return "";
+  return `<div class="verdict ${p.strikes>=STRIKE_PENALTY?"no":"wait"}" style="margin-top:10px">⚠️ Privacy strikes: <b>${p.strikes}</b>${p.strikes>=STRIKE_PENALTY?" · rewards −20%":p.strikes>=STRIKE_REJECT?" · face photos now get rejected":""}.
+    Clear quests on ${CLEAN_DAYS-p.clean.length} more day(s) without face photos to remove ${Math.min(STRIKE_DECAY,p.strikes)}.</div>`;
+}
+
+/* ---------- Adventurer's Guidelines: agreed to before the first quest ---------- */
+function openRules(after){
+  const agreed = !!state.rulesAgreed;
+  openModal(`<span class="ribbon">ADVENTURER'S GUIDELINES</span>
+    <p class="note" style="margin:0;text-align:center">Every guild member agrees to these before taking on quests.</p>
+    <ol class="rules">
+      <li><b>Be honest.</b> Only report quests you've really done. The guild runs on trust.</li>
+      <li><b>No faces or people in proof photos.</b> That includes your own face: no selfies or mirror shots. If anyone ends up in shot, cover them with the ✏️ tool before sending.</li>
+      <li><b>Keep it private.</b> Never photograph bodies, IDs, bank cards, letters with addresses, or screens with personal info. If a quest can't be shown without something private, Lilia makes it a trust quest instead.</li>
+      <li><b>Where photos go.</b> The app doesn't keep your photos. Each one is only sent to the checker you chose: your own AI key's provider, or your Guild Inspector.</li>
+      <li><b>Privacy strikes.</b> Each face photo is a strike. At ${STRIKE_REJECT} strikes, face photos get rejected. At ${STRIKE_PENALTY}, rewards drop 20%. Every ${CLEAN_DAYS} different days you clear quests without a face photo removes ${STRIKE_DECAY} strikes.</li>
+      <li><b>Be kind to yourself.</b> Missed a day? That's fine. Rest is part of every adventure.</li>
+    </ol>
+    ${agreed?`<div class="verdict ok">✔ You agreed to these guidelines.</div><div class="btns"><button class="gbtn plain" data-act="close">Close</button></div>`
+    :`<label class="rulechk" id="rulesChkLbl"><input type="checkbox" id="rulesChk"> I've read the Adventurer's Guidelines and agree to follow them.</label>
+    <div class="btns"><button class="gbtn" id="rulesAgree" disabled>✍️ Sign and join the guild</button><button class="gbtn plain" data-act="close">Not now</button></div>`}`);
+  if(agreed) return;
+  $("rulesChk").onchange = () => { $("rulesAgree").disabled = !$("rulesChk").checked; };
+  $("rulesAgree").onclick = () => { state.rulesAgreed = Date.now(); save(); closeModal(); toast("Guidelines signed! ✍️"); if(after) after(); else render(); };
+}
+
+/* ---------- delete all data (deliberately hard to do by accident) ---------- */
+function openWipe(){
+  const name = (state.name||"Adventurer").trim();
+  openModal(`<span class="ribbon">DELETE ALL DATA</span>
+    <div class="verdict no"><b>⚠️ This cannot be undone.</b> Your hero, level, gold, crystals, recruits, gear, quests, records and settings (including your AI key and Guild Inspector) will be permanently deleted from this device. There is no backup.</div>
+    <label for="wipeName">TYPE YOUR ADVENTURER NAME TO CONFIRM<input type="text" id="wipeName" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${esc(name)}"></label>
+    <p class="note" style="margin:-4px 0 0">Type <b>${esc(name)}</b> exactly, including capitals.</p>
+    <div class="btns">
+      <button class="gbtn danger-solid" id="wipeGo" disabled>Delete everything forever</button>
+      <button class="gbtn plain" data-act="close">Cancel, keep my data</button>
+    </div>`);
+  const inp=$("wipeName"), go=$("wipeGo");
+  inp.addEventListener("input", () => { go.disabled = inp.value.trim() !== name; });
+  go.onclick = () => {
+    if(inp.value.trim() !== name) return;
+    go.disabled = true; go.textContent = "Deleting…"; wiping = true;
+    try{ ["guild-save","guild-ai","guild-sound","guild-offset","guild-bgm"].forEach(k=>localStorage.removeItem(k)); }catch(e){}
+    ref = null;
+    state = freshState(); state.tut = {step:"intro"};
+    closeModal();
+    setTimeout(() => location.reload(), 300);
+  };
+}
+
+/* ---------- settings ---------- */
+function renderSettings(){
+  const off = Music.offset;
+  return `<button class="gbtn plain" data-act="card" style="margin-bottom:-4px">← Back to Guild Card</button>
+  <section class="frame"><span class="ribbon">REGISTRATION</span>
+    <form id="nameForm"><label for="advNameInput">ADVENTURER NAME<input type="text" id="advNameInput" maxlength="30" value="${esc(state.name)}"></label>
+      <button class="gbtn blue" type="submit">Update name</button></form></section>
+  <section class="frame"><span class="ribbon">GUIDELINES</span>
+    <p class="note" style="margin:0 0 8px;text-align:center">The rules every adventurer agreed to, including photo privacy.</p>
+    <button class="gbtn plain" data-act="rulesOpen">📜 Read the Adventurer's Guidelines</button>${strikeLine()}</section>
+  ${renderProfileSettings()}
+  ${renderAISettings()}
+  ${renderInspectorSettings()}
+  <section class="frame"><span class="ribbon">SOUND</span>
+    <div class="setrow"><span><b>Battle music &amp; effects</b><small>Chiptune music and hit sounds</small></span>
+      <button class="toggle ${Music.on?'on':''}" data-act="sound" aria-pressed="${Music.on}"><i></i></button></div>
+    <div class="setrow"><span><b>Background music</b><small>Guild ambience, the rowdy tavern and cozy gathering tunes</small></span>
+      <button class="toggle ${BGM.on?'on':''}" data-act="bgm" aria-pressed="${BGM.on}"><i></i></button></div></section>
+  ${Notify.settingsHTML()}
+  <section class="frame"><span class="ribbon">RHYTHM CALIBRATION</span>
+    <p class="note" style="margin:0 0 8px">If hits feel early or late, run the test: tap the pad in time with the clicks you hear.</p>
+    <div class="setrow"><span><b>Timing offset</b><small>${off===0?"No adjustment":off>0?`Notes judged ${off} ms later`:`Notes judged ${-off} ms earlier`}</small></span>
+      <span class="stepper"><button class="mini" data-act="off" data-v="-10">−</button><b id="offTxt">${off>0?"+":""}${off} ms</b><button class="mini" data-act="off" data-v="10">+</button></span></div>
+    <div id="calBox"><button class="gbtn" data-act="calStart">🥁 Start calibration test</button></div>
+  </section>
+  <section class="frame" id="secSave"><span class="ribbon">SAVE DATA</span><p class="note" style="margin:0;text-align:center">${esc(statusText)}</p>
+    <p class="note" style="margin:8px 0;text-align:center">Your progress only lives on this device. Export a backup now and then, or to move to another phone or browser. (Your AI key isn't included.)</p>
+    <div class="btns" style="grid-template-columns:1fr 1fr;display:grid;gap:8px"><button class="gbtn blue" data-act="saveExport">📤 Export save</button><button class="gbtn plain" data-act="saveImport">📥 Import save</button></div>
+    <div class="danger-zone"><b>Danger zone</b>
+      <p class="note" style="margin:4px 0 8px">Delete everything this app has saved on this device and start over from the tutorial.</p>
+      <button class="gbtn plain danger" data-act="wipeOpen">🗑️ Delete all data</button></div></section>`;
+}
+
+let aiStatusMsg = "";
+/* ---------- 18+ confirmation before AI setup ----------
+   The AI services only let adults (18+) make accounts, and quest photos get sent to them.
+   A simple tick box, asked once. No birth year, no "get a parent". */
+const AI_ADULT_NOTE = "AI checking uses an outside AI service. These services only let people aged 18 or over create an account, and your quest photos are sent to the one you choose.";
+function adultGate(then){
+  if(state.ai18) return then();
+  openModal(`<span class="ribbon">BEFORE YOU START</span><h3 class="t">🤖 AI checker</h3>
+    <p class="note" style="margin:0">${AI_ADULT_NOTE}</p>
+    <label class="chk18"><input type="checkbox" id="ai18"> I'm 18 or older</label>
+    <div class="btns"><button class="gbtn" id="ai18Go" disabled>Continue</button><button class="gbtn plain" id="ai18No">I'm under 18</button></div>`);
+  $("ai18").onchange = () => { $("ai18Go").disabled = !$("ai18").checked; };
+  $("ai18Go").onclick = () => { state.ai18 = true; save(); closeModal(); then(); };
+  $("ai18No").onclick = () => under18AI();
+}
+function under18AI(){
+  openModal(`<span class="ribbon">NO PROBLEM</span>
+    <p class="note" style="margin:0">You can use a <b>Guild Inspector</b> instead: someone you trust who checks your proof photos by email. It's free and they don't need an account. Someone 18 or over can also set up the AI checker on this device for you.</p>
+    <div class="btns"><button class="gbtn" data-act="settingsOpen" data-v="secIns">🧐 Set up a Guild Inspector</button><button class="gbtn plain" data-act="close">Close</button></div>`);
+}
+function renderAISettings(){
+  const c = AI.cfg, P = AI_PROVIDERS[c.provider];
+  if(!state.ai18) return `<section class="frame" id="secAI"><span class="ribbon">LILIA'S AI BRAIN</span>
+    <p class="note" style="margin:0 0 8px">Add your own AI key so Lilia can check proof photos and write bounties.</p>
+    <button class="gbtn" data-act="aiUnlock" style="width:100%">🤖 Set up the AI checker</button></section>`;
+  return `<section class="frame" id="secAI"><span class="ribbon">LILIA'S AI BRAIN</span>
+    <p class="note" style="margin:0 0 8px">${AI_ADULT_NOTE}</p>
+    <p class="note" style="margin:0 0 8px">Add your own AI key so Lilia can check proof photos and write bounties. Your key stays on this device and is only sent to the AI you pick.</p>
+    <form id="aiForm">
+      <label for="aiProv">AI PROVIDER<select id="aiProv">${Object.entries(AI_PROVIDERS).map(([k,p])=>`<option value="${k}" ${c.provider===k?"selected":""}>${p.n}</option>`).join("")}</select></label>
+      <p class="note" style="margin:0">${esc(P.note)} <a href="${P.keyUrl}" target="_blank" rel="noopener" style="color:var(--gold)">Get a key</a></p>
+      <label for="aiModel">MODEL<input type="text" id="aiModel" placeholder="${esc(P.model)}" value="${esc(c.model)}" autocomplete="off"></label>
+      <label for="aiKey">API KEY<input type="password" id="aiKey" placeholder="${c.key?"•••••••• (saved)":"Paste your key"}" autocomplete="off"></label>
+      <button class="gbtn" type="submit">Save &amp; test</button>
+      ${c.key?`<button type="button" class="gbtn plain danger" data-act="aiClear">Remove key</button>`:""}
+      <p class="note" id="aiStatus" style="margin:0;text-align:center">${aiStatusMsg ? esc(aiStatusMsg) : c.key?`✔ Key saved · using ${esc(AI.model())}`:"No key yet. Photo quests need an AI key or a Guild Inspector."}</p>
+    </form></section>`;
+}
+function renderInspectorSettings(){
+  const i = state.inspector || {};
+  return `<section class="frame" id="secIns"><span class="ribbon">GUILD INSPECTOR</span>
+    <p class="note" style="margin:0 0 8px">A friend or family member who checks your proof photos by email. They don't need the app or an account. They just tap ✅ or ❌ and press Send.</p>
+    <form id="insForm">
+      <label for="insName">FRIEND'S NAME<input type="text" id="insName" maxlength="30" value="${esc(i.name||"")}" placeholder="e.g. Sam"></label>
+      <label for="insEmail">FRIEND'S EMAIL<input type="email" id="insEmail" value="${esc(i.email||"")}" placeholder="friend@example.com"></label>
+      <label for="insMe">YOUR EMAIL (their reply comes here)<input type="email" id="insMe" value="${esc(i.myEmail||"")}" placeholder="you@example.com"></label>
+      <button class="gbtn blue" type="submit">Save inspector</button>
+    </form></section>`;
+}
+function render(){
+  ensureHero(); if(typeof applyForge==="function") applyForge();
+  renderHUD();
+  const navTab = (tab==="board"||tab==="library") ? "home" : (tab==="card"||tab==="settings") ? "" : tab;
+  document.querySelectorAll(".nav button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab===navTab)));
+  const home = tab==="home";
+  $("app").classList.toggle("dim", !home);
+  $("panel").classList.toggle("sheetup", tab==="board"||tab==="library");
+  requestAnimationFrame(()=>Tut.update());
+  $("dialog").hidden = !home || Tut.active(); $("side").hidden = !home; $("side").classList.toggle("tutting", Tut.active());
+  $("panel").innerHTML = home ? "" : tab==="board" ? renderBoard() : tab==="library" ? renderLibrary() : tab==="party" ? renderPartyTab() : tab==="adventure" ? renderAdventureTab() : tab==="shop" ? renderShopTab() : tab==="gacha" ? renderGachaTab() : tab==="card" ? renderCardScreen() : renderSettings();
+}
+function scrollToSec(id, quiet){
+  if(!id) return;
+  setTimeout(()=>{ const el=$(id), p=$("panel"); if(!el||!p) return;
+    p.scrollTo({top: el.getBoundingClientRect().top - p.getBoundingClientRect().top + p.scrollTop - 12, behavior:"smooth"});
+    if(quiet) return; el.classList.add("flashsec"); setTimeout(()=>el.classList.remove("flashsec"), 1600); }, 60);
+}
+function go(t){ if(t==="adventure") advSub="menu"; if(typeof calStop==="function") calStop(); if(t==="settings") Tut.markSettings(); setTimeout(()=>Tut.update(), 0); if(t!=="party") partyPick=null; tab = t; render(); $("panel").scrollTop = 0; }
+
+/* ---------- reward splash ---------- */
+function splash(html, ms){
+  return new Promise(res => {
+    const s = $("splash"); $("spIn").innerHTML = html; s.classList.add("show");
+    let done = false; const end = () => { if(done) return; done = true; s.classList.remove("show"); s.onclick = null; res(); };
+    s.onclick = end; if(ms) setTimeout(end, ms);
+  });
+}
+function countUp(el, to){
+  if(reduceMotion){ el.textContent = "+"+to; return; }
+  const t0 = performance.now(), dur = 700;
+  (function f(t){ const p = Math.min(1,(t-t0)/dur); el.textContent = "+" + Math.round(to*p); if(p<1) requestAnimationFrame(f); })(t0);
+}
+
+/* ---------- actions ---------- */
+const STUDY_NOTE_MIN = 10;   // characters needed in a study note for the +10% bonus
+async function grant(q, verified, method, opts={}){
+  const before = levelInfo(state.xp).lvl;
+  const r = q.tut ? {xp:10, gold:100} : reward(qRank(q), verified ? "photo" : "honour");
+  let cry = q.tut ? 220 : cryFor(q);
+  const pen = q.tut ? 1 : strikePenalty();
+  if(pen<1){ r.xp=Math.round(r.xp*pen); r.gold=Math.round(r.gold*pen); cry=Math.round(cry*pen); }
+  const studyNote = (opts.note||"").trim().length >= STUDY_NOTE_MIN;
+  if(studyNote){ r.xp=Math.round(r.xp*1.1); r.gold=Math.round(r.gold*1.1); }
+  if(!q.tut && !opts.face) noteCleanDay();
+  if(!q.tut){ Rank.onClear(!!verified); const ad=state.activeDays||(state.activeDays=[]), dk=dayKey(); if(!ad.includes(dk)) ad.push(dk); }
+  if(q.tut && state.tut) state.tut.claimed = true;
+  noteClear(q);
+  state.xp += r.xp; state.gold += r.gold; state.completed += 1; state.crystals = (state.crystals||0) + cry;
+  if(q.bounty){ q.done = true; }
+  else if(!q.repeat || q.repeat==="once" || q.repeat==="due"){ state.quests = state.quests.filter(x=>x.id!==q.id); }
+  else { state.done[q.id] = {day:dayKey(), week:weekKey(), cycle: hasDueDay(q) ? weeklyDue(q) : undefined}; }
+  delete state.active[q.id];
+  const nt = (opts.note||"").trim() ? Journal.addNote(opts.note, {kind:"study", quest:q.title}) : null;
+  const tm = new Date(); const time = `${String(tm.getHours()).padStart(2,"0")}:${String(tm.getMinutes()).padStart(2,"0")}`;
+  state.log.unshift({title:q.title, date:dayKey(), time, cat:q.cat, xp:r.xp, gold:r.gold, v:!!verified, m:method||(verified?"ai":"honour"), nid:nt?nt.id:undefined});
+  if(state.pending) delete state.pending[q.id];
+  state.log = state.log.slice(0,1500);
+  save(); render();
+  const p = splash(`<div class="sp-title">QUEST<br>CLEAR!</div><div class="sp-sub">${esc(q.title)}</div>
+    <div class="loot"><div>${ORB}<b id="lxp">+0</b><span>EXP</span></div><div>${COIN}<b id="lg">+0</b><span>GOLD</span></div><div>${PX.img(PX.icon("crystal"),"lootico")}<b>+${cry}</b><span>CRYSTALS</span></div></div>
+    ${studyNote?`<div class="sp-sub" style="color:#9cf5c0;font-size:13px">📚 +10% study note bonus! Saved to your Journal.</div>`:""}
+    ${pen<1?`<div class="sp-sub" style="color:#ff9b8f;font-size:13px">−20% rewards (privacy strikes). Keep clearing quests without face photos: every ${CLEAN_DAYS} clean days removes ${STRIKE_DECAY} strikes.</div>`:""}
+    <div class="tap">Tap to continue</div>`, 4000);
+  countUp($("lxp"), r.xp); countUp($("lg"), r.gold);
+  await p;
+  const after = levelInfo(state.xp).lvl;
+  if(after > before){
+    const promoted = false; Rank.checkEligible(before);
+    await splash(`<div class="sp-title">${promoted?"RANK UP!":"LEVEL UP!"}</div>
+      <div class="lv" style="width:90px;height:90px"><div><small style="font-size:12px">LV</small><b style="font-size:36px">${after}</b></div></div>
+      <div class="sp-sub">${promoted?`You're now a ${guildRank(after)}-Rank Adventurer!`:`${guildRank(after)}-Rank Adventurer`}</div>
+      <div class="tap">Tap to continue</div>`, 3500);
+    say(promoted ? `Congratulations on your promotion to ${guildRank(after)}-Rank! I'll update your guild card right away!` : `Level ${after}! You're getting stronger every day.`);
+  }
+  if(q.story) Story.questDone(q.story);
+}
+
+function handleAct(b){
+  const id = b.dataset.id, act = b.dataset.act, v = b.dataset.v;
+  if(Tut.active() && (((act==="accept"||act==="report") && id!=="tut-register") || act==="postNew" || act==="postEdit" || act==="bounties")){
+    toast("Finish Lilia's tutorial first! ✨"); return;
+  }
+  if(act.startsWith("fc-") && Focus.act(act, b)) return;
+  if(act.startsWith("nt-")){ Notify.act(act, b); return; }
+  if(act==="ad-watch"){ Ads.watch(); return; }
+  if(act==="boot-deliver"){ closeModal(); LostBoot.deliver(); return; }
+  if((act==="journal" || act.startsWith("jn-")) && Journal.act(act, b)) return;
+  if(act==="focus"){ closeModal(); Focus.open(id); return; }
+  if(act==="library"){ go("library"); return; }
+  if(act.startsWith("g-")) return gameAct(b);
+  if(act.startsWith("st-") && Story.act(act, v)) return;
+  if(act.startsWith("ev-") && Ev.act(act)) return;
+  if((act.startsWith("p-")||act==="pull") && partyAct(b)) return;
+  if(act==="open"){ openNotice(id); }
+  else if(act==="accept" && !state.rulesAgreed){ openRules(()=>handleAct(b)); }
+  else if(act==="accept"){ state.active[id] = {at:Date.now()}; save(); closeModal(); render(); const q=findQuest(id); toast(`Accepted: ${q.title}`); say(`"${q.title}", accepted! Come back to me when it's done${q.proof==="photo"?" and bring a photo":""}.`); }
+  else if(act==="abandon"){ delete state.active[id]; save(); closeModal(); render(); say("Dropped it? No penalty this time… but the board remembers. Just kidding! Mostly."); }
+  else if(act==="report"){ openReport(id); }
+  else if(act==="close"){ postDraft=null; closeModal(); setTimeout(()=>Tut.update(), 0); }
+  else if(act==="bounties"){ fetchBounties(b); }
+  else if(act==="openBoard"){ boardTab = v || "quests"; go("board"); }
+  else if(act==="closeBoard"){ go("home"); }
+  else if(act==="boardTab" && v==="supplies" && !Tut.allowSupplies()){ toast("Hunt & Gather opens later in the tutorial! ✨"); }
+  else if(act==="boardTab"){ boardTab = v; render(); $("panel").scrollTop = 0; }
+  else if(act==="postNew"){ openPostForm(null); }
+  else if(act==="postEdit"){ openPostForm(id); }
+  else if(act==="pfSched"){ syncPost(); postDraft.repeat = v; drawPostForm(); }
+  else if(act==="pfDueDay"){ syncPost(); postDraft.dueDay = v==="" ? null : +v; drawPostForm(); }
+  else if(act==="pfDay"){ syncPost(); const n=+v, a=postDraft.days; const i=a.indexOf(n); if(i>=0) a.splice(i,1); else a.push(n); drawPostForm(); }
+  else if(act==="postDelete"){ state.quests = state.quests.filter(q=>q.id!==id); delete state.active[id]; delete state.done[id]; postDraft=null; save(); closeModal(); render(); toast("Quest removed."); }
+  else if(act==="poolN"){ const n=state.quests.filter(q=>q.repeat==="pool").length; state.poolPerDay = Math.max(1, Math.min(n, (state.poolPerDay||2) + (+v))); save(); render(); }
+  else if(act==="card"){ closeModal(); go("card"); if(b.dataset.v==="equip" && Tut.wantsEquip()) scrollToSec("secEquip", true); }
+  else if(act==="settingsOpen"){ closeModal(); go("settings"); scrollToSec(v); }
+  else if(act==="records"){ closeModal(); Journal.open("diary"); }
+  else if(act==="sound"){ Music.toggle(); render(); }
+  else if(act==="bgm"){ BGM.toggle(); render(); }
+  else if(act==="off"){ Music.setOffset(Music.offset + (+v)); render(); }
+  else if(act==="calStart"){ calStart(); }
+  else if(act==="goSettings"){ closeModal(); go("settings"); scrollToSec(v); }
+  else if(act==="tutClaim"){ Tut.claim(); }
+  else if(act==="tutAI"){ adultGate(()=>Tut.aiPicker()); }
+  else if(act==="aiUnlock"){ adultGate(()=>{ render(); scrollToSec("secAI", true); }); }
+  else if(act==="tutTip"){ Tut.tip(); }
+  else if(act==="tutStepBtn"){ Tut.stepBtn(); }
+  else if(act==="tutNext"){ closeModal(); Tut.next(); }
+  else if(act==="qz"){ QZ.ans[QZ.i]=+v; QZ.i++; drawQuiz(); }
+  else if(act==="qzBack"){ QZ.i=Math.max(0,QZ.i-1); drawQuiz(); }
+  else if(act==="quizStart"){ openQuiz(); }
+  else if(act==="pfCat"){ syncPost(); postDraft.cat=v; drawPostForm(); }
+  else if(act==="pfSize"){ syncPost(); postDraft.size=v; drawPostForm(); }
+  else if(act==="pfSort"){ pfAskLilia(b); }
+  else if(act==="pfDupe"){ syncPost(); postDraft.replace = v==="replace" ? postDraft.dupe : null; postDraft.stage="confirm"; drawPostForm(); }
+  else if(act==="pfProof"){ syncPost(); if(!(postDraft.ai && postDraft.ai.proof==="honour")) postDraft.proof=v; drawPostForm(); }
+  else if(act==="pfStage"){ syncPost(); postDraft.stage=v; drawPostForm(); }
+  else if(act==="pfManual"){ syncPost(); postDraft.stage="full"; drawPostForm(); }
+  else if(act==="wipeOpen"){ openWipe(); }
+  else if(act==="rulesOpen"){ openRules(); }
+  else if(act.startsWith("rk-")){ Rank.act(act); }
+  else if(act==="saveExport"){ exportSave(); }
+  else if(act==="saveImport"){ importSave(); }
+  else if(act==="aiClear"){ AI.clearKey(); aiStatusMsg=""; render(); toast("Key removed from this device."); }
+}
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-tab]"); if(t){ if(!Tut.allowTab(t.dataset.tab)){ toast("Follow Lilia's tutorial first! ✨"); return; } go(t.dataset.tab); return; }
+  const b = e.target.closest("[data-act]"); if(b) handleAct(b);
+});
+$("panel").addEventListener("change", e => {
+  if(e.target.id==="aiProv"){
+    const typedKey = $("aiKey") ? $("aiKey").value : "";
+    AI.set({provider:e.target.value, model:""}); aiStatusMsg = ""; render();
+    if(typedKey && $("aiKey")) $("aiKey").value = typedKey;   // don't lose a pasted key
+  }
+});
+$("panel").addEventListener("submit", async e => {
+  if(e.target.id==="aiForm"){
+    e.preventDefault();
+    const key = $("aiKey").value.trim();
+    AI.set({provider:$("aiProv").value, model:$("aiModel").value.trim(), ...(key?{key}:{})});
+    const st = $("aiStatus");
+    if(!AI.ready()){ st.textContent = "Paste your key into the API KEY box first."; return; }
+    aiStatusMsg = "✔ Key saved. Testing it…"; st.textContent = aiStatusMsg;
+    toast("✔ Key saved!");
+    try{ await AI.test(); aiStatusMsg = "✔ Key saved and working! Lilia's ready."; }
+    catch(err){ aiStatusMsg = "⚠ Key saved, but the test failed: " + (err.message||"unknown error") + " Check the key and model, then tap Save & test again."; }
+    const s2=$("aiStatus"); if(s2) s2.textContent = aiStatusMsg;
+    return;
+  }
+  if(e.target.id==="insForm"){
+    e.preventDefault();
+    state.inspector = {name:$("insName").value.trim(), email:$("insEmail").value.trim(), myEmail:$("insMe").value.trim()};
+    save(); render(); toast(inspectorReady()?"Guild Inspector registered!":"Add both emails to finish setup.");
+    return;
+  }
+  if(e.target.id==="nameForm"){
+    e.preventDefault();
+    state.name = $("advNameInput").value.trim() || "Adventurer"; save(); render(); toast("Registration updated!");
+  }
+});
+let cardFrom = "home";
+const openGuildCard = () => {   // tapping your portrait again closes the card and goes back where you were
+  if(tab==="card" || tab==="settings"){ go(cardFrom); return; }
+  cardFrom = tab; go("card"); if(Tut.wantsEquip()) scrollToSec("secEquip", true); };   // tutorial: jump straight to the gear to equip the new weapon
+$("plate").addEventListener("click", openGuildCard);
+$("plate").addEventListener("keydown", e => { if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openGuildCard(); } });
+function pokeLilia(){
+  const el = $("liliaArt"); el.classList.remove("poke"); void el.offsetWidth; el.classList.add("poke");
+  if(tab!=="home") go("home");
+  say(pick(POKES));
+}
+$("liliaArt").addEventListener("click", pokeLilia);
+$("liliaArt").addEventListener("keydown", e => { if(e.key==="Enter"||e.key===" "){ e.preventDefault(); pokeLilia(); } });
+
+/* ---------- modals ---------- */
+function closeModal(){ $("modal").classList.remove("open"); }
+function openModal(html){ $("sheet").innerHTML = html; $("modal").classList.add("open"); const f=$("sheet").querySelector("button"); if(f) f.focus({preventScroll:true}); }
+$("modal").addEventListener("click", e => { if(e.target.id==="modal") closeModal(); });
+document.addEventListener("keydown", e => { if(e.key==="Escape") closeModal(); });
+
+function openNotice(id){
+  const q = findQuest(id); if(!q) return;
+  const r = qReward(q), active = !!state.active[id];
+  openModal(`<span class="ribbon">${q.bounty?"BOUNTY":"REQUEST"}</span>
+    <div class="parch">
+      <span class="stars" style="color:#b8800c;font-size:16px">${stars(qRank(q))}</span>
+      <h3>${esc(q.title)}</h3>
+      ${q.flavour?`<div style="font-size:14px">“${esc(q.flavour)}”</div>`:""}
+      <div class="kv"><span>Rank</span><b>${qRank(q)}</b></div>
+      ${q.cat&&CATS[q.cat]?`<div class="kv"><span>Type</span><span>${CATS[q.cat].i} ${CATS[q.cat].n} · ${SIZES[q.size].n}</span></div>`:""}
+      <div class="kv"><span>Reward</span><b>${r.xp} EXP · ${r.gold} G · ${cryFor(q)} 💎</b></div>
+      <div class="kv"><span>Proof</span><span>${q.tut?"👍 Thumbs-up photo (AI) or nothing (Inspector)":q.proof==="photo"?"📸 Photo, checked by Lilia":"🤝 Trust (half reward)"}</span></div>
+      <div class="kv"><span>Posted</span><span>${repeatTxt(q)}</span></div>
+    </div>
+    <div class="btns">
+      ${active
+        ? `<button class="gbtn" data-act="report" data-id="${q.id}">Report completion</button>
+           <button class="gbtn blue" data-act="abandon" data-id="${q.id}">Drop quest</button>`
+        : (Tut.active() && !q.tut) ? `<p class="note" style="margin:0;text-align:center">🔒 You can take on quests like this once the tutorial is done.</p>`
+        : `<button class="gbtn" data-act="accept" data-id="${q.id}">Accept quest</button>`}
+      <button class="gbtn plain" data-act="close">Back</button>
+    </div>`);
+}
+
+function openReport(id){
+  const q = findQuest(id); if(!q) return;
+  if(q.tut) return openTutReport(q);
+  if(q.proof==="honour"){
+    const study = q.cat==="study";
+    openModal(`<span class="ribbon">REPORT</span><h3 class="t">${esc(q.title)}</h3>
+      <div style="font-size:14px"><b style="color:var(--rose)">Lilia:</b> ${study?"A study quest! It's a trust quest, but tell me what you studied and I'll add a little bonus~":"This one's a trust quest, so I'll take your word for it. You really did it, right? I'll know if you didn't. (I won't. But the guild spirit will.)"}</div>
+      ${study?`<button class="gbtn blue" data-act="focus" data-id="${q.id}">⏱️ Start a focus timer for this</button>
+        <label class="studynote"><span>📚 What did you study? <small>(optional · +10% rewards · saved to your Journal)</small></span>
+        <textarea id="studyNote" maxlength="2000" placeholder="e.g. Chapter 3 of my biology notes: how cells divide. Made 10 flashcards."></textarea>
+        <small id="snHint" class="sn-hint">Write a little more to get the bonus.</small></label>`:""}
+      <div class="btns"><button class="gbtn" id="honourYes">Yes, it's done</button>
+      <button class="gbtn plain" data-act="close">Not yet</button></div>`);
+    const sn=$("studyNote");
+    if(sn) sn.oninput = () => { const ok=sn.value.trim().length>=STUDY_NOTE_MIN; $("snHint").textContent = ok?"✨ +10% bonus unlocked!":sn.value.trim()?"Write a little more to get the bonus.":"Write a little more to get the bonus."; $("snHint").classList.toggle("ok", ok); };
+    $("honourYes").onclick = () => { const note=sn?sn.value:""; closeModal(); grant(q,false,undefined,{note}); say(note.trim().length>=STUDY_NOTE_MIN?"Ooh, look at you studying! I've tucked your notes into your journal~":"Stamped on trust. Thanks for keeping the guild's faith in you!"); };
+    return;
+  }
+  const act = state.active[id] || (state.active[id] = {at:Date.now()});
+  const pend = pendingFor(id);
+  const aiOn = AI.ready(), insOn = inspectorReady();
+  openModal(`<span class="ribbon">REPORT</span><h3 class="t">${esc(q.title)}</h3>
+    ${pend?`<div class="verdict wait">⏳ Sent to your Guild Inspector. When they reply, tap the link in their email, or paste the code here:</div>
+      <div class="codebox"><input type="text" id="codeIn" placeholder="GQ-XXXX-XXXXXX" autocomplete="off"><button class="gbtn sm" id="codeGo">Apply</button></div>
+      <button class="gbtn plain sm" id="codePaste" style="width:100%">📋 Paste from clipboard</button>`:""}
+    ${shotFor(q)?`<div class="shotreq"><b>📸 Show:</b> ${esc(shotFor(q))}</div>`:""}
+    <p class="note" style="margin:0;text-align:center">${shotFor(q)?"":"Snap a photo of the finished job. "}Proof has to be taken live with the in-app camera.</p>
+    <button class="filebtn" id="camBtn" type="button">📸 Open camera</button>
+    <img class="preview" id="prev" alt="Your proof photo">
+    <div id="verdict"></div>
+    <div class="btns" id="checkBtns">
+      ${aiOn?`<button class="gbtn" id="chkAI" disabled>🤖 Hand it to Lilia (AI check) · full reward</button>`:""}
+      ${insOn?`<button class="gbtn blue" id="chkIns" disabled>🧐 Send to Guild Inspector · full reward</button>`:""}
+      ${aiOn||insOn?"":`<p class="note" style="margin:0;text-align:center">Lilia needs someone to check your photo. Set up an AI checker or a Guild Inspector in Settings.</p>
+        <button class="gbtn" data-act="goSettings" data-v="secAI">⚙️ Open Settings</button>`}
+      <button class="gbtn plain" data-act="close">Back</button>
+    </div>`);
+  if(pend){
+    $("codeGo").onclick = () => applyInspectorCode($("codeIn").value);
+    $("codePaste").onclick = async () => { try{ const t = await navigator.clipboard.readText(); $("codeIn").value = (t.match(/GQ-[A-Z0-9]{4}-[A-Z0-9]{6}/i)||[t])[0]; applyInspectorCode($("codeIn").value); }catch(e){ toast("Couldn't read the clipboard. Paste the code into the box instead."); } };
+  }
+  let file = null;
+  const btns = ["chkAI","chkIns"].map($).filter(Boolean);
+  $("camBtn").onclick = async () => {
+    const shot = await proofShot(shotFor(q) ? `For this one, show: ${shotFor(q)}.` : undefined);
+    if(shot==="old"){ const v=$("verdict"); v.className="verdict no"; v.textContent="Lilia: That photo isn't fresh. Take a new one with the camera, please!"; return; }
+    if(!shot || !$("prev")) return;
+    file = shot;
+    const p = $("prev"); p.src = URL.createObjectURL(file); p.style.display="block";
+    $("camBtn").textContent = "📸 Retake photo";
+    $("verdict").textContent = ""; $("verdict").className = "";
+    btns.forEach(b=>b.disabled=false);
+  };
+  const fresh = () => true;
+  const busy = (on, msg) => { btns.forEach(b=>b.disabled=on); const v=$("verdict"); if(on){ v.className="verdict wait"; v.textContent=msg; } };
+  if($("chkAI")) $("chkAI").onclick = async () => {
+    if(!file || !fresh()) return;
+    busy(true, "Lilia is squinting at your photo…");
+    const v = $("verdict");
+    try{
+      const img = await shrink(file);
+      const prompt = `You are Lilia, the cheerful receptionist of an adventurers' guild in an anime fantasy world. An adventurer is handing in proof for a real-life chore quest.
+Quest: "${q.title}"
+The photo was taken live with the app's camera just now.
+Approve only if the photo reasonably shows this task done or its finished result. Be fair: a clean sink and drying rack is fine for dishes, a made bed for "make the bed". Accept reasonable evidence for tasks that are hard to show fully.
+Homes are lived in. Judge the task itself, the way a fair friend would, not whether the room looks like a showroom: things that normally live out (furniture, decor, a laptop on a desk, a blanket on the couch, toiletries by the sink, shoes by the door) are fine, and so is mess outside the task's scope. Only reject for leftover mess the task was clearly meant to deal with.
+${shotFor(q)?`What this quest's photo must show: ${shotFor(q)}. Reject photos that don't show this.
+`:""}Reject photos that would look exactly the same whether or not the task was done today (e.g. clothes sitting in a wardrobe for a laundry quest, a closed cupboard).
+Reject photos of a screen, monitor, phone or printed picture (look for glare, pixels, bezels, moiré or paper edges), and clearly unrelated scenes.
+Also check privacy: set "faces" to true if any real person's face is visible, even partly (including in a mirror). Areas painted over in solid black have been censored on purpose; that's fine.
+Reply with JSON only: {"approved": true or false, "faces": true or false, "comment": "1-2 short sentences in character as Lilia, talking to the adventurer. If rejecting, say exactly what to fix."}`;
+      const res = await AI.vision(prompt, img);
+      const face = !!(res && res.faces === true);
+      const lockedOut = face && privacy().strikes >= STRIKE_REJECT;   // 3+ strikes: face photos get rejected
+      let ok = !!(res && res.approved === true) && !lockedOut;
+      let comment = (res && typeof res.comment==="string" && res.comment) || (ok?"Looks good to me! Stamped.":"I can't approve this one. Try another photo?");
+      if(face){ const n = addStrike();
+        comment = lockedOut ? `There's a face in this photo, and you're on ${n} privacy strikes, so I can't accept it. Cover it with the ✏️ tool or retake without anyone in shot!`
+          : `${comment} ⚠️ But I can see a face! That's privacy strike ${n}. Please keep faces out of proof photos.`; }
+      v.className = "verdict " + (ok?"ok":"no");
+      v.textContent = (ok?"✔ APPROVED! ":"✖ REJECTED. ") + comment;
+      if(ok){ say(comment); setTimeout(()=>{ closeModal(); grant(q,true,"ai",{face}); }, face?3200:1500); }
+      else busy(false);
+    }catch(err){ busy(false); v.className = "verdict no"; v.textContent = err.message || "Something went wrong while checking. Try again in a moment."; }
+  };
+  if($("chkIns")) $("chkIns").onclick = async () => {
+    if(!file || !fresh()) return;
+    busy(true, "Preparing the inspection request…");
+    try{
+      const img = await shrink(file);
+      const how = await sendToInspector(q, img);
+      closeModal(); render();
+      toast(how==="mailto" ? "Email draft opened. Attach the photo, then send it!" : how==="shared-copied" ? "📋 Paste your friend's email into To, then send!" : how==="email" ? "Email ready. Just press Send!" : "Sent! Waiting for your Guild Inspector.");
+      say(`I've sent your proof to ${state.inspector.name || "your Guild Inspector"}. Tap their reply link when it comes in!`);
+    }catch(err){ busy(false); if(err && err.name==="AbortError"){ $("verdict").textContent=""; $("verdict").className=""; return; } const v=$("verdict"); v.className="verdict no"; v.textContent="Couldn't open the share menu. Try again."; }
+  };
+}
+
+function shrink(file){
+  return new Promise((resolve,reject) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const max = 1024, s = Math.min(1, max/Math.max(img.width,img.height));
+      const c = document.createElement("canvas"); c.width = Math.round(img.width*s); c.height = Math.round(img.height*s);
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob(b => b ? resolve(b) : reject(new Error("encode")), "image/jpeg", .82);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("load")); };
+    img.src = url;
+  });
+}
+
+/* ---------- bounties ---------- */
+async function fetchBounties(btn){
+  let list = [];
+  if(AI.ready()){
+    btn.disabled = true; btn.textContent = "Lilia is digging through the request pile…";
+    try{
+      const existing = state.quests.map(q=>q.title).join("; ");
+      const out = await AI.json(`You are Lilia, receptionist of an anime fantasy adventurers' guild. Post 3 bonus bounties for today for a ${Rank.cur()}-Rank adventurer (ranks go F, E, D, C, B, A, S; higher ranks should get more substantial tasks): real-life household or self-care tasks one person can do at home in 5-${[30,30,40,45,60,60,75][Rank.idx(Rank.cur())]} minutes, phrased as plain tasks (no fantasy wording in the title). Avoid repeating these existing quests: ${existing || "none"}.
+For each: "title" (max 60 chars), "cat" one of physical, outside, social, study, household, selfcare, admin, creative (the thing that makes it hardest), "size" one of quick, medium, big, "proof" either "photo" (if the finished result can be photographed without any people, faces, mirrors or private info in shot) or "honour" (anything private, body-related, social, or with nothing to see), "flavour" one short in-character line from Lilia (max 90 chars).
+Reply with JSON only: {"bounties":[{"title":"","cat":"","size":"","proof":"","flavour":""}]}`);
+      list = (out && Array.isArray(out.bounties) ? out.bounties : []).slice(0,3)
+        .filter(b => b && typeof b.title==="string" && b.title.trim())
+        .map(b => ({id:uid(), bounty:true, title:b.title.trim().slice(0,80), rank:"D", cat:CATS[b.cat]?b.cat:"household", size:SIZES[b.size]?b.size:"quick",
+                    proof:b.proof==="honour"?"honour":"photo", flavour:typeof b.flavour==="string"?b.flavour.slice(0,120):"", done:false}));
+    }catch(err){ toast(err.message || "Couldn't reach the AI, so Lilia used the guild's request pile instead."); }
+  }
+  if(!list.length) list = offlineBounties();
+  state.bounties = {date:dayKey(), list};
+  save(); render(); toast("★ 3 new bounties pinned to the board!");
+}
+
+/* ---------- sparkle particles ---------- */
+(function sparkles(){
+  if(reduceMotion) return;
+  const c = $("fx"), ctx = c.getContext("2d"); let W=0,H=0,dpr=1;
+  const P = Array.from({length:34}, () => ({x:Math.random(), y:Math.random(), r:.6+Math.random()*1.8, s:.00015+Math.random()*.0004, a:Math.random()*6.28}));
+  function size(){ dpr = Math.min(2, devicePixelRatio||1); W=c.clientWidth; H=c.clientHeight; c.width=W*dpr; c.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); }
+  size(); addEventListener("resize", size);
+  (function frame(){
+    ctx.clearRect(0,0,W,H);
+    for(const p of P){
+      p.y -= p.s; p.a += .03; if(p.y < -.02){ p.y = 1.02; p.x = Math.random(); }
+      const al = .35 + .35*Math.sin(p.a);
+      ctx.fillStyle = `rgba(255,226,150,${al})`; ctx.beginPath(); ctx.arc(p.x*W + Math.sin(p.a*.5)*6, p.y*H, p.r, 0, 6.29); ctx.fill();
+    }
+    requestAnimationFrame(frame);
+  })();
+})();
+
+/* ---------- boot ---------- */
+function withTimeout(p, ms){ return Promise.race([p, new Promise(r=>setTimeout(()=>r(null), ms))]); }
+function normalise(s){
+  const f = freshState();
+  if(!s.rank){ const lv=levelInfo(s.xp||0).lvl; s.rank = ["E","D","C","B","A","S"].filter(r=>lv>=({E:5,D:10,C:20,B:35,A:50,S:65})[r]).pop() || "F"; }
+  if(!Array.isArray(s.activeDays)) s.activeDays = [...new Set((s.log||[]).map(l=>l.date).filter(Boolean))];
+  return { ...f, ...s, quests:Array.isArray(s.quests)?s.quests:f.quests, done:s.done||{}, active:s.active||{},
+           bounties:s.bounties||{date:"",list:[]}, log:Array.isArray(s.log)?s.log:[], poolPerDay:s.poolPerDay||2, inspector:s.inspector||{}, pending:s.pending||{}, tut:s.tut||((s.hero&&s.hero.created)?{done:true}:undefined) };
+}
+/* ---------- title screen: shown on every launch. Optional key art: art/title.png ---------- */
+function titleScreen(){
+  return new Promise(res => {
+    const back = state.hero && state.hero.created;
+    const t=document.createElement("div"); t.id="title"; t.className="title";
+    t.innerHTML=`<div class="ti-art"></div><div class="ti-glow"></div>
+      <div class="ti-logo"><small>✦ Chore ✦</small><b>Isekai</b><span class="ti-sub">An adventurer's guild for real-life chores</span></div>
+      <div class="ti-mons"><span>${monsterSVG("slime")}</span><span>${monsterSVG("shroom")}</span><span>${monsterSVG("bat")}</span></div>
+      <div class="ti-menu">
+        <button class="ti-start" id="tiStart">${back?`▶ Continue as ${esc(state.name)}`:"▶ Start"}</button>
+        <button class="ti-link" id="tiLoad">📂 Load a save file</button>
+      </div>
+      <small class="ti-ver">Saved on this device</small>`;
+    $("app").appendChild(t); $("app").classList.add("titling");
+    $("tiLoad").onclick = () => importSave();
+    $("tiStart").onclick = () => {
+      $("tiStart").onclick=null; t.classList.add("out");   // logo and buttons fade, leaving black
+      setTimeout(()=>{ t.id="titleFade"; $("app").classList.remove("titling"); res(); }, 650);
+    };
+  });
+}
+/** After the game behind has set itself up (tutorial scene, guild hall), fade the black away */
+function titleReveal(){
+  const t=$("titleFade"); if(!t) return;
+  setTimeout(()=>{ t.classList.add("gone"); setTimeout(()=>t.remove(), 700); }, 250);
+}
+(async function boot(){
+  if(inspectPage()) return;   // opened from an inspector email: show only the approve / not yet page
+  try{ const l = localStorage.getItem("guild-save"); if(l) state = normalise(JSON.parse(l)); }catch(e){}
+  render();
+  say(pick(GREETINGS));
+  setStatus("Your progress is saved on this device.");
+  Art.preload().then(() => { Lilia.init(); hudLookKey=""; render(); }).catch(()=>{});
+  if(!state.tut) state.tut = (state.hero && state.hero.created) ? {done:true} : {step:"intro"};
+  await titleScreen();
+  try{ Music.sfx("perfect"); }catch(e){}
+  if(state.tut.done && !state.profile) setTimeout(() => { if(!$("modal").classList.contains("open")) openQuiz(); }, 400);
+  else if(state.tut.done && !state.rulesAgreed) setTimeout(() => { if(!$("modal").classList.contains("open")) openRules(); }, 400);
+  Tut.update();
+  render();
+  titleReveal(); BGM.update();
+  try{ Notify.sync(); }catch(e){}
+  try{ Ads.init(); }catch(e){}
+  checkLinkCode();
+})();
+</script>
+</body>
+</html>
