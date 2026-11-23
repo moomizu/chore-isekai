@@ -19,16 +19,28 @@ function liveCamera(){
       <div class="camui"><p class="note">Show the finished job, then snap!</p>
         <div class="cambtns"><button class="gbtn plain" data-cam="cancel">Cancel</button><button class="snap" data-cam="snap" aria-label="Take photo"></button><span></span></div></div>`;
     document.getElementById("app").appendChild(box);
-    const video = box.querySelector("video"); video.srcObject = stream;
+    const video = box.querySelector("video"), snap = box.querySelector("[data-cam=snap]"), tip = box.querySelector(".camui .note");
+    video.srcObject = stream;
+    // Laptop webcams show black frames for a moment while they wake up, so keep the snap button off until real frames arrive
+    let ready = false; snap.disabled = true; tip.textContent = "Waking up the camera…";
+    const warm = () => { if(ready) return; setTimeout(() => { ready = true; snap.disabled = false; tip.textContent = "Show the finished job, then snap!"; }, 700); };
+    video.addEventListener("playing", warm, {once:true});
+    video.play().catch(()=>{}); setTimeout(warm, 2500);   // some browsers never fire "playing" for autoplay
     const stop = () => { stream.getTracks().forEach(t=>t.stop()); box.remove(); };
+    const isBlack = c => {   // sample the frame: is it (almost) all black?
+      const x = c.getContext("2d"), d = x.getImageData(0, 0, c.width, c.height).data; let sum = 0, n = 0;
+      for(let i = 0; i < d.length; i += 4*97){ sum += d[i] + d[i+1] + d[i+2]; n++; }
+      return sum / (n*3) < 10;
+    };
     box.addEventListener("click", e => {
       const b = e.target.closest("[data-cam]"); if(!b) return;
       if(b.dataset.cam==="cancel"){ stop(); resolve(null); return; }
       const w = video.videoWidth, h = video.videoHeight;
-      if(!w || !h) return;
+      if(!ready || !w || !h) return;
       const c = document.createElement("canvas"); c.width = w; c.height = h; c.getContext("2d").drawImage(video, 0, 0, w, h);
+      if(isBlack(c)){ tip.textContent = "That came out black. Is the camera covered, or still waking up? Try again!"; return; }
       box.classList.add("flash");
-      c.toBlob(blob => { stop(); resolve(blob); }, "image/jpeg", .9);
+      stop(); resolve(c);   // hand over the canvas itself: drawing canvas-to-canvas is reliable in every browser
     });
   });
 }
@@ -55,11 +67,29 @@ function photoReminder(extra){
   });
 }
 /** Lets the player paint over faces or private bits before the photo is sent. Resolves with the edited image (or the original). */
-function censorPhoto(file){
+async function loadPicture(src){
+  if(src instanceof HTMLCanvasElement) return src;
+  const url = URL.createObjectURL(src);
+  try{
+    const img = new Image(); img.src = url;
+    if(img.decode) await img.decode(); else await new Promise((ok, no) => { img.onload = ok; img.onerror = no; });
+    return img;   // the url is revoked later, once the picture has been drawn
+  }catch(e){
+    if(window.createImageBitmap){ try{ return await createImageBitmap(src); }catch(e2){} }
+    throw e;
+  }finally{ setTimeout(() => URL.revokeObjectURL(url), 5000); }
+}
+const toFile = canvas => new Promise(res => canvas.toBlob(b => res(b ? new File([b], "proof.jpg", {type:"image/jpeg", lastModified:Date.now()}) : null), "image/jpeg", .9));
+function drewSomething(ctx, w, h){   // a properly drawn photo is opaque; a failed draw leaves the canvas transparent
+  try{ const d = ctx.getImageData(0, 0, w, h).data; for(let i = 3; i < d.length; i += 4*211) if(d[i] > 0) return true; return false; }catch(e){ return true; }
+}
+/** Lets the player paint over faces or private bits before the photo is sent. Resolves with the edited image as a File, or null to retake. */
+async function censorPhoto(src){
+  let pic;
+  try{ pic = await loadPicture(src); }catch(e){ return src instanceof HTMLCanvasElement ? toFile(src) : src; }
+  const pw = pic.naturalWidth || pic.width, ph = pic.naturalHeight || pic.height;
   return new Promise(resolve => {
-    const url = URL.createObjectURL(file), img = new Image();
-    img.onload = () => {
-      const max = 1280, s = Math.min(1, max/Math.max(img.width, img.height));
+      const max = 1280, s = Math.min(1, max/Math.max(pw, ph));
       const box = document.createElement("div"); box.className = "camfx censor";
       box.innerHTML = `<p class="cz-tip">✏️ Cover any faces, people or private info. Keep enough of the photo visible to show the task is done!</p>
         <div class="cz-wrap"><canvas id="czCan"></canvas></div>
@@ -67,8 +97,11 @@ function censorPhoto(file){
           <button class="chip" id="czUndo">↩ Undo</button><button class="chip" id="czClear">Reset</button></div>
         <div class="pv-btns"><button class="gbtn plain" id="czBack">Retake</button><button class="gbtn" id="czDone">✔ Use this photo</button></div>`;
       document.getElementById("app").appendChild(box);
-      const c = box.querySelector("#czCan"); c.width = Math.round(img.width*s); c.height = Math.round(img.height*s);
-      const x = c.getContext("2d"); x.drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      const c = box.querySelector("#czCan"); c.width = Math.max(1, Math.round(pw*s)); c.height = Math.max(1, Math.round(ph*s));
+      const x = c.getContext("2d");
+      const paint = () => { x.fillStyle = "#000"; x.fillRect(0, 0, c.width, c.height); x.drawImage(pic, 0, 0, c.width, c.height); };
+      paint();
+      if(!drewSomething(x, c.width, c.height)) requestAnimationFrame(paint);   // some browsers need one more frame
       const hist = []; let w = 30, drawing = false, last = null;
       const pos = e => { const r = c.getBoundingClientRect(); return [(e.clientX-r.left)*c.width/r.width, (e.clientY-r.top)*c.height/r.height]; };
       const scale = () => c.width / c.getBoundingClientRect().width;
@@ -79,12 +112,9 @@ function censorPhoto(file){
       c.onpointerup = c.onpointercancel = () => { drawing=false; last=null; };
       box.querySelectorAll("[data-w]").forEach(b => b.onclick = () => { w=+b.dataset.w; box.querySelectorAll("[data-w]").forEach(o=>o.classList.toggle("on", o===b)); });
       box.querySelector("#czUndo").onclick = () => { const h=hist.pop(); if(h) x.putImageData(h,0,0); };
-      box.querySelector("#czClear").onclick = () => { if(hist.length){ x.putImageData(hist[0],0,0); hist.length=0; } };
+      box.querySelector("#czClear").onclick = () => { if(hist.length){ x.putImageData(hist[0],0,0); hist.length=0; } else paint(); };
       box.querySelector("#czBack").onclick = () => { box.remove(); resolve(null); };
-      box.querySelector("#czDone").onclick = () => c.toBlob(b => { box.remove(); resolve(b ? new File([b], "proof.jpg", {type:"image/jpeg", lastModified:Date.now()}) : file); }, "image/jpeg", .9);
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
-    img.src = url;
+      box.querySelector("#czDone").onclick = async () => { const f = await toFile(c); box.remove(); resolve(f || (src instanceof HTMLCanvasElement ? await toFile(src) : src)); };
   });
 }
 /** Reminder -> camera -> cover-up tool. Returns a File, "old", or null. */
